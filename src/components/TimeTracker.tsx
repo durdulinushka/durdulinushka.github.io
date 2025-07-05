@@ -2,20 +2,34 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Pause, Bell } from "lucide-react";
+import { Clock, Pause } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TimeTrackerProps {
   dailyHours: number;
+}
+
+interface TimeTrackingRecord {
+  id: string;
+  employee_id: string;
+  date: string;
+  start_time: string | null;
+  end_time: string | null;
+  pause_duration: number;
+  total_hours: number;
+  status: 'not-started' | 'working' | 'paused' | 'finished';
+  login_time: string;
 }
 
 type WorkStatus = 'not-started' | 'working' | 'paused' | 'finished';
 
 const TimeTracker = ({ dailyHours }: TimeTrackerProps) => {
   const { toast } = useToast();
+  const [timeRecord, setTimeRecord] = useState<TimeTrackingRecord | null>(null);
   const [workStatus, setWorkStatus] = useState<WorkStatus>('not-started');
   const [startTime, setStartTime] = useState<Date | null>(null);
-  const [pausedTime, setPausedTime] = useState(0); // общее время пауз в миллисекундах
+  const [pausedTime, setPausedTime] = useState(0);
   const [pauseStart, setPauseStart] = useState<Date | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -24,6 +38,74 @@ const TimeTracker = ({ dailyHours }: TimeTrackerProps) => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Инициализация отслеживания времени
+  useEffect(() => {
+    initializeTimeTracking();
+  }, []);
+
+  const initializeTimeTracking = async () => {
+    try {
+      // Получаем первого сотрудника для демонстрации
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .limit(1);
+
+      if (profileError || !profiles.length) {
+        console.error('Error fetching profile:', profileError);
+        return;
+      }
+
+      const currentEmployeeId = profiles[0].id;
+      const today = new Date().toISOString().split('T')[0];
+
+      // Проверяем, есть ли запись за сегодня
+      let { data: existingRecord, error: fetchError } = await supabase
+        .from('time_tracking')
+        .select('*')
+        .eq('employee_id', currentEmployeeId)
+        .eq('date', today)
+        .single();
+
+      if (!existingRecord && fetchError?.code === 'PGRST116') {
+        // Создаем новую запись
+        const { data: newRecord, error: insertError } = await supabase
+          .from('time_tracking')
+          .insert([{
+            employee_id: currentEmployeeId,
+            date: today,
+            status: 'not-started'
+          }])
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        existingRecord = newRecord;
+      }
+
+      if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
+
+      if (existingRecord) {
+        const typedRecord: TimeTrackingRecord = {
+          ...existingRecord,
+          status: existingRecord.status as 'not-started' | 'working' | 'paused' | 'finished'
+        };
+        setTimeRecord(typedRecord);
+        setWorkStatus(typedRecord.status);
+        
+        if (existingRecord.start_time) {
+          setStartTime(new Date(existingRecord.start_time));
+        }
+
+        // Восстанавливаем время пауз
+        setPausedTime(existingRecord.pause_duration * 60 * 1000);
+      }
+    } catch (error) {
+      console.error('Error initializing time tracking:', error);
+      toast({ title: "Ошибка", description: "Не удалось загрузить данные времени", variant: "destructive" });
+    }
+  };
 
   // Расчет отработанного времени
   const getWorkedTime = () => {
@@ -51,58 +133,157 @@ const TimeTracker = ({ dailyHours }: TimeTrackerProps) => {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const startWork = () => {
-    setStartTime(new Date());
-    setWorkStatus('working');
-    setPausedTime(0);
-    setPauseStart(null);
-    
-    toast({
-      title: "Работа начата!",
-      description: "Счетчик рабочего времени запущен",
-    });
+  const startWork = async () => {
+    if (!timeRecord) return;
+
+    try {
+      const now = new Date();
+      const nowISOString = now.toISOString();
+
+      const { error } = await supabase
+        .from('time_tracking')
+        .update({
+          start_time: nowISOString,
+          status: 'working'
+        })
+        .eq('id', timeRecord.id);
+
+      if (error) throw error;
+
+      setStartTime(now);
+      setWorkStatus('working');
+      setPausedTime(0);
+      setPauseStart(null);
+      
+      setTimeRecord({
+        ...timeRecord,
+        start_time: nowISOString,
+        status: 'working'
+      });
+
+      toast({
+        title: "Работа начата!",
+        description: "Счетчик рабочего времени запущен",
+      });
+    } catch (error) {
+      console.error('Error starting work:', error);
+      toast({ title: "Ошибка", description: "Не удалось начать работу", variant: "destructive" });
+    }
   };
 
-  const pauseWork = () => {
-    if (workStatus === 'working') {
+  const pauseWork = async () => {
+    if (!timeRecord || workStatus !== 'working') return;
+
+    try {
+      const { error } = await supabase
+        .from('time_tracking')
+        .update({ status: 'paused' })
+        .eq('id', timeRecord.id);
+
+      if (error) throw error;
+
       setPauseStart(new Date());
       setWorkStatus('paused');
       
+      setTimeRecord({
+        ...timeRecord,
+        status: 'paused'
+      });
+
       toast({
         title: "Работа приостановлена",
         description: "Счетчик рабочего времени поставлен на паузу",
       });
+    } catch (error) {
+      console.error('Error pausing work:', error);
+      toast({ title: "Ошибка", description: "Не удалось приостановить работу", variant: "destructive" });
     }
   };
 
-  const resumeWork = () => {
-    if (workStatus === 'paused' && pauseStart) {
+  const resumeWork = async () => {
+    if (!timeRecord || workStatus !== 'paused' || !pauseStart) return;
+
+    try {
       const pauseDuration = new Date().getTime() - pauseStart.getTime();
-      setPausedTime(prev => prev + pauseDuration);
+      const newPausedTime = pausedTime + pauseDuration;
+      const pauseDurationMinutes = Math.floor(newPausedTime / (1000 * 60));
+
+      const { error } = await supabase
+        .from('time_tracking')
+        .update({
+          status: 'working',
+          pause_duration: pauseDurationMinutes
+        })
+        .eq('id', timeRecord.id);
+
+      if (error) throw error;
+
+      setPausedTime(newPausedTime);
       setPauseStart(null);
       setWorkStatus('working');
       
+      setTimeRecord({
+        ...timeRecord,
+        status: 'working',
+        pause_duration: pauseDurationMinutes
+      });
+
       toast({
         title: "Работа возобновлена",
         description: "Счетчик рабочего времени продолжает работу",
       });
+    } catch (error) {
+      console.error('Error resuming work:', error);
+      toast({ title: "Ошибка", description: "Не удалось возобновить работу", variant: "destructive" });
     }
   };
 
-  const finishWork = () => {
-    if (pauseStart) {
-      const pauseDuration = new Date().getTime() - pauseStart.getTime();
-      setPausedTime(prev => prev + pauseDuration);
-      setPauseStart(null);
+  const finishWork = async () => {
+    if (!timeRecord) return;
+
+    try {
+      let finalPausedTime = pausedTime;
+      
+      if (pauseStart) {
+        const pauseDuration = new Date().getTime() - pauseStart.getTime();
+        finalPausedTime += pauseDuration;
+        setPauseStart(null);
+      }
+
+      const now = new Date().toISOString();
+      const totalWorkedMilliseconds = getWorkedTime();
+      const totalHours = totalWorkedMilliseconds / (1000 * 60 * 60);
+
+      const { error } = await supabase
+        .from('time_tracking')
+        .update({
+          end_time: now,
+          status: 'finished',
+          total_hours: totalHours,
+          pause_duration: Math.floor(finalPausedTime / (1000 * 60))
+        })
+        .eq('id', timeRecord.id);
+
+      if (error) throw error;
+
+      setWorkStatus('finished');
+      setPausedTime(finalPausedTime);
+      
+      setTimeRecord({
+        ...timeRecord,
+        end_time: now,
+        status: 'finished',
+        total_hours: totalHours
+      });
+
+      toast({
+        title: "Рабочий день завершен!",
+        description: `Отработано: ${formatTime(totalWorkedMilliseconds)}`,
+      });
+    } catch (error) {
+      console.error('Error finishing work:', error);
+      toast({ title: "Ошибка", description: "Не удалось завершить рабочий день", variant: "destructive" });
     }
-    
-    setWorkStatus('finished');
-    const totalWorked = getWorkedTime();
-    
-    toast({
-      title: "Рабочий день завершен!",
-      description: `Отработано: ${formatTime(totalWorked)}`,
-    });
   };
 
   const resetWork = () => {
@@ -110,6 +291,8 @@ const TimeTracker = ({ dailyHours }: TimeTrackerProps) => {
     setStartTime(null);
     setPausedTime(0);
     setPauseStart(null);
+    // Инициализируем новый день
+    initializeTimeTracking();
   };
 
   const workedTime = getWorkedTime();
