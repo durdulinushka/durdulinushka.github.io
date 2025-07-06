@@ -1,13 +1,9 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Clock, Pause, MessageCircle, FileText, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import TaskAcceptance from "./TaskAcceptance";
+import ActiveTaskTracker from "./ActiveTaskTracker";
+import TaskActions from "./TaskActions";
 
 interface Task {
   id: string;
@@ -47,8 +43,6 @@ const TaskTracker = ({ dailyHours }: TaskTrackerProps) => {
   const [pausedTime, setPausedTime] = useState(0);
   const [pauseStart, setPauseStart] = useState<Date | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [commentContent, setCommentContent] = useState("");
-  const [documentFile, setDocumentFile] = useState<File | null>(null);
 
   // Обновление текущего времени каждую секунду
   useEffect(() => {
@@ -363,8 +357,8 @@ const TaskTracker = ({ dailyHours }: TaskTrackerProps) => {
     }
   };
 
-  const addComment = async () => {
-    if (!commentContent.trim() || !currentTask) return;
+  const addComment = async (content: string) => {
+    if (!currentTask) return;
 
     try {
       const { data: profiles } = await supabase
@@ -379,12 +373,11 @@ const TaskTracker = ({ dailyHours }: TaskTrackerProps) => {
         .insert([{
           task_id: currentTask.id,
           author_id: profiles[0].id,
-          content: commentContent.trim()
+          content: content
         }]);
 
       if (error) throw error;
 
-      setCommentContent("");
       toast({
         title: "Комментарий добавлен",
         description: "Комментарий успешно сохранен",
@@ -395,8 +388,8 @@ const TaskTracker = ({ dailyHours }: TaskTrackerProps) => {
     }
   };
 
-  const uploadDocument = async () => {
-    if (!documentFile || !currentTask) return;
+  const uploadDocument = async (file: File) => {
+    if (!currentTask) return;
 
     try {
       const { data: profiles } = await supabase
@@ -406,13 +399,13 @@ const TaskTracker = ({ dailyHours }: TaskTrackerProps) => {
 
       if (!profiles?.length) return;
 
-      const fileName = `${Date.now()}-${documentFile.name}`;
+      const fileName = `${Date.now()}-${file.name}`;
       const filePath = `${currentTask.id}/${fileName}`;
 
       // Загружаем файл в storage
       const { error: uploadError } = await supabase.storage
         .from('task-documents')
-        .upload(filePath, documentFile);
+        .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
@@ -427,15 +420,14 @@ const TaskTracker = ({ dailyHours }: TaskTrackerProps) => {
         .insert([{
           task_id: currentTask.id,
           uploader_id: profiles[0].id,
-          file_name: documentFile.name,
+          file_name: file.name,
           file_url: urlData.publicUrl,
-          file_size: documentFile.size,
-          file_type: documentFile.type
+          file_size: file.size,
+          file_type: file.type
         }]);
 
       if (dbError) throw dbError;
 
-      setDocumentFile(null);
       toast({
         title: "Документ загружен",
         description: "Документ успешно прикреплен к задаче",
@@ -447,252 +439,35 @@ const TaskTracker = ({ dailyHours }: TaskTrackerProps) => {
   };
 
   const workedTime = getWorkedTime();
-  const dailyTarget = dailyHours * 60 * 60 * 1000;
-  const progress = Math.min((workedTime / dailyTarget) * 100, 100);
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'bg-corporate-red';
-      case 'medium': return 'bg-corporate-orange';
-      case 'low': return 'bg-corporate-green';
-      default: return 'bg-muted';
-    }
-  };
-
-  const getStatusBadge = () => {
-    switch (workStatus) {
-      case 'not-started':
-        return <Badge variant="outline">Ожидание задачи</Badge>;
-      case 'working':
-        return <Badge className="bg-corporate-green">В работе</Badge>;
-      case 'paused':
-        return <Badge className="bg-corporate-orange">На паузе</Badge>;
-      case 'finished':
-        return <Badge className="bg-corporate-blue">Завершено</Badge>;
-      default:
-        return null;
-    }
-  };
 
   return (
     <div className="space-y-6">
-      {/* Текущая задача и трекер времени */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="w-5 h-5" />
-                {currentTask ? `Работа над: ${currentTask.title}` : 'Трекер времени'}
-              </CardTitle>
-              <CardDescription>
-                {currentTask ? currentTask.description : 'Выберите задачу для начала работы'}
-              </CardDescription>
-            </div>
-            {getStatusBadge()}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Текущая задача */}
-          {currentTask && (
-            <div className="border rounded-lg p-4 space-y-2">
-              <div className="flex items-start justify-between gap-2">
-                <h4 className="font-medium">{currentTask.title}</h4>
-                <Badge 
-                  className={`text-xs ${getPriorityColor(currentTask.priority)} text-white`}
-                >
-                  {currentTask.priority === 'high' ? 'Высокий' : 
-                   currentTask.priority === 'medium' ? 'Средний' : 'Низкий'}
-                </Badge>
-              </div>
-              {currentTask.description && (
-                <p className="text-sm text-muted-foreground">{currentTask.description}</p>
-              )}
-              {currentTask.due_date && (
-                <p className="text-xs text-muted-foreground">
-                  Срок: {new Date(currentTask.due_date).toLocaleDateString('ru-RU')}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Таймер */}
-          {currentTask && (
-            <div className="text-center">
-              <div className="text-4xl font-bold text-corporate-blue mb-2">
-                {formatTime(workedTime)}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Цель: {dailyHours} часов ({formatTime(dailyTarget)})
-              </div>
-            </div>
-          )}
-
-          {/* Кнопки управления */}
-          <div className="flex gap-2">
-            {workStatus === 'working' && (
-              <>
-                <Button 
-                  variant="warning" 
-                  className="flex-1"
-                  onClick={pauseWork}
-                >
-                  <Pause className="w-4 h-4 mr-2" />
-                  Пауза
-                </Button>
-                <Button 
-                  variant="success" 
-                  onClick={finishTask}
-                >
-                  <Check className="w-4 h-4 mr-2" />
-                  Завершить задачу
-                </Button>
-              </>
-            )}
-
-            {workStatus === 'paused' && (
-              <>
-                <Button 
-                  variant="corporate" 
-                  className="flex-1"
-                  onClick={resumeWork}
-                >
-                  Продолжить работу
-                </Button>
-                <Button 
-                  variant="success" 
-                  onClick={finishTask}
-                >
-                  <Check className="w-4 h-4 mr-2" />
-                  Завершить задачу
-                </Button>
-              </>
-            )}
-          </div>
-
-          {/* Быстрые действия для текущей задачи */}
-          {currentTask && (
-            <div className="grid grid-cols-2 gap-2">
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Добавить комментарий
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Добавить комментарий</DialogTitle>
-                    <DialogDescription>
-                      Комментарий к задаче "{currentTask.title}"
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <Textarea
-                      placeholder="Введите комментарий..."
-                      value={commentContent}
-                      onChange={(e) => setCommentContent(e.target.value)}
-                    />
-                    <div className="flex justify-end gap-2">
-                      <Button onClick={addComment}>
-                        Добавить
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <FileText className="w-4 h-4 mr-2" />
-                    Приложить документ
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Приложить документ</DialogTitle>
-                    <DialogDescription>
-                      Документ к задаче "{currentTask.title}"
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <Input
-                      type="file"
-                      onChange={(e) => setDocumentFile(e.target.files?.[0] || null)}
-                    />
-                    {documentFile && (
-                      <p className="text-sm text-muted-foreground">
-                        Выбран файл: {documentFile.name}
-                      </p>
-                    )}
-                    <div className="flex justify-end gap-2">
-                      <Button onClick={uploadDocument} disabled={!documentFile}>
-                        Загрузить
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Активный трекер задачи */}
+      {currentTask && (workStatus === 'working' || workStatus === 'paused') && (
+        <>
+          <ActiveTaskTracker
+            currentTask={currentTask}
+            workStatus={workStatus}
+            workedTime={workedTime}
+            dailyHours={dailyHours}
+            onPause={pauseWork}
+            onResume={resumeWork}
+            onFinish={finishTask}
+          />
+          <TaskActions
+            currentTask={currentTask}
+            onAddComment={addComment}
+            onUploadDocument={uploadDocument}
+          />
+        </>
+      )}
 
       {/* Доступные задачи */}
       {workStatus === 'not-started' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Доступные задачи</CardTitle>
-            <CardDescription>
-              Выберите задачу для начала работы
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {tasks.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Нет доступных задач</p>
-            ) : (
-              tasks.map((task) => (
-                <div key={task.id} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <h4 className="font-medium">{task.title}</h4>
-                      {task.description && (
-                        <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
-                      )}
-                    </div>
-                    <div className="flex gap-1">
-                      <Badge 
-                        className={`text-xs ${getPriorityColor(task.priority)} text-white`}
-                      >
-                        {task.priority === 'high' ? 'Высокий' : 
-                         task.priority === 'medium' ? 'Средний' : 'Низкий'}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {task.task_type === 'daily' ? 'Ежедневная' :
-                         task.task_type === 'long-term' ? 'Долгосрочная' : 'Срочная'}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    {task.due_date && (
-                      <span className="text-xs text-muted-foreground">
-                        Срок: {new Date(task.due_date).toLocaleDateString('ru-RU')}
-                      </span>
-                    )}
-                    <Button 
-                      variant="corporate"
-                      size="sm"
-                      onClick={() => acceptTask(task)}
-                    >
-                      Принять задачу
-                    </Button>
-                  </div>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+        <TaskAcceptance
+          tasks={tasks}
+          onAcceptTask={acceptTask}
+        />
       )}
     </div>
   );
