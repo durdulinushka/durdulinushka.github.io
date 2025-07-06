@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Calendar, User, Plus } from "lucide-react";
 import EmployeeList from "@/components/EmployeeList";
 import TaskManagement from "@/components/TaskManagement";
+import TaskCommentsAndDocs from "@/components/TaskCommentsAndDocs";
 
 interface AdminDashboardProps {
   onBack: () => void;
@@ -19,7 +20,7 @@ const mockStats = {
 };
 
 const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'tasks'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'tasks' | 'reports'>('overview');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted p-6">
@@ -56,6 +57,12 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             onClick={() => setActiveTab('tasks')}
           >
             Задачи
+          </Button>
+          <Button 
+            variant={activeTab === 'reports' ? 'corporate' : 'ghost'}
+            onClick={() => setActiveTab('reports')}
+          >
+            Отчеты
           </Button>
         </div>
 
@@ -167,6 +174,9 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
 
         {/* Управление задачами */}
         {activeTab === 'tasks' && <TaskManagement />}
+
+        {/* Отчеты по задачам */}
+        {activeTab === 'reports' && <TaskCommentsAndDocs />}
       </div>
     </div>
   );
