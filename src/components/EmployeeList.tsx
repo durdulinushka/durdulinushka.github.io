@@ -114,7 +114,10 @@ const EmployeeList = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1"
             />
-            <Button variant="corporate">
+            <Button 
+              variant="corporate"
+              onClick={() => alert('Функция добавления сотрудника будет реализована')}
+            >
               Добавить сотрудника
             </Button>
           </div>
@@ -168,10 +171,18 @@ const EmployeeList = () => {
 
                   {/* Действия */}
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => alert(`Настройка плана для ${employee.name}`)}
+                    >
                       Настроить план
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => alert(`Назначение задачи для ${employee.name}`)}
+                    >
                       Назначить задачу
                     </Button>
                   </div>

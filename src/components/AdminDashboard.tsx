@@ -134,7 +134,11 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <Button variant="outline" className="justify-start h-auto p-4">
+                  <Button 
+                    variant="outline" 
+                    className="justify-start h-auto p-4"
+                    onClick={() => setActiveTab('employees')}
+                  >
                     <div className="flex items-center gap-3">
                       <Plus className="w-5 h-5" />
                       <div className="text-left">
@@ -144,7 +148,11 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                     </div>
                   </Button>
                   
-                  <Button variant="outline" className="justify-start h-auto p-4">
+                  <Button 
+                    variant="outline" 
+                    className="justify-start h-auto p-4"
+                    onClick={() => setActiveTab('tasks')}
+                  >
                     <div className="flex items-center gap-3">
                       <Calendar className="w-5 h-5" />
                       <div className="text-left">
@@ -154,7 +162,11 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                     </div>
                   </Button>
                   
-                  <Button variant="outline" className="justify-start h-auto p-4">
+                  <Button 
+                    variant="outline" 
+                    className="justify-start h-auto p-4"
+                    onClick={() => setActiveTab('reports')}
+                  >
                     <div className="flex items-center gap-3">
                       <Users className="w-5 h-5" />
                       <div className="text-left">
