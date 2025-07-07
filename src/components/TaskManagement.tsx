@@ -484,7 +484,11 @@ const TaskManagement = () => {
             </div>
             <div className="flex gap-2">
               <Textarea placeholder="Добавить комментарий..." className="flex-1" />
-              <Button variant="corporate" size="sm">
+              <Button 
+                variant="corporate" 
+                size="sm"
+                onClick={() => alert('Комментарий отправлен')}
+              >
                 Отправить
               </Button>
             </div>
@@ -505,7 +509,11 @@ const TaskManagement = () => {
             <div className="border-2 border-dashed border-muted rounded-lg p-6 text-center">
               <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">Перетащите файлы сюда или нажмите для выбора</p>
-              <Button variant="outline" className="mt-2">
+              <Button 
+                variant="outline" 
+                className="mt-2"
+                onClick={() => alert('Функция выбора файлов будет реализована')}
+              >
                 Выбрать файлы
               </Button>
             </div>

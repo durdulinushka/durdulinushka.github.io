@@ -174,10 +174,18 @@ const TaskList = ({ tasks: initialTasks }: TaskListProps) => {
         {/* Быстрые действия */}
         <div className="pt-4 border-t">
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => alert('Функция добавления комментария будет реализована')}
+            >
               Добавить комментарий
             </Button>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => alert('Функция прикрепления документа будет реализована')}
+            >
               Приложить документ
             </Button>
           </div>
