@@ -6,6 +6,7 @@ import { Users, Calendar, User, Plus } from "lucide-react";
 import EmployeeList from "@/components/EmployeeList";
 import TaskManagement from "@/components/TaskManagement";
 import TaskCommentsAndDocs from "@/components/TaskCommentsAndDocs";
+import { AddEmployeeDialog } from "./AddEmployeeDialog";
 
 interface AdminDashboardProps {
   onBack: () => void;

@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { User, Clock, Calendar } from "lucide-react";
+import { AddEmployeeDialog } from "./AddEmployeeDialog";
 
 interface Employee {
   id: number;
@@ -114,12 +115,7 @@ const EmployeeList = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1"
             />
-            <Button 
-              variant="corporate"
-              onClick={() => alert('Функция добавления сотрудника будет реализована')}
-            >
-              Добавить сотрудника
-            </Button>
+            <AddEmployeeDialog />
           </div>
         </CardContent>
       </Card>
