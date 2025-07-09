@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { User, Clock, Calendar } from "lucide-react";
 import { AddEmployeeDialog } from "./AddEmployeeDialog";
+import { DeleteEmployeeDialog } from "./DeleteEmployeeDialog";
 
 interface Employee {
   id: number;
@@ -181,6 +182,11 @@ const EmployeeList = () => {
                     >
                       Назначить задачу
                     </Button>
+                    <DeleteEmployeeDialog 
+                      employeeId={employee.id.toString()}
+                      employeeName={employee.name}
+                      onEmployeeDeleted={() => alert(`${employee.name} удален`)}
+                    />
                   </div>
                 </div>
               </div>

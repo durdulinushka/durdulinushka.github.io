@@ -78,7 +78,14 @@ const Index = () => {
           </Card>
         </div>
 
-        <div className="mt-12 text-center">
+        <div className="mt-12 text-center space-y-4">
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.href = '/auth'}
+            className="mr-4"
+          >
+            Войти в систему
+          </Button>
           <p className="text-sm text-muted-foreground">
             Для полноценной работы системы необходимо подключить Supabase интеграцию
           </p>
