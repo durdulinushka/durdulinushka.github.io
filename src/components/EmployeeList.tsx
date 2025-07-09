@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,65 +6,58 @@ import { Input } from "@/components/ui/input";
 import { User, Clock, Calendar } from "lucide-react";
 import { AddEmployeeDialog } from "./AddEmployeeDialog";
 import { DeleteEmployeeDialog } from "./DeleteEmployeeDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Employee {
-  id: number;
-  name: string;
+  id: string;
+  full_name: string;
   department: string;
   position: string;
-  dailyHours: number;
-  status: 'working' | 'paused' | 'offline';
-  todayHours: number;
+  daily_hours: number;
   email: string;
 }
 
-// Моковые данные сотрудников
-const mockEmployees: Employee[] = [
-  {
-    id: 1,
-    name: "Иван Петров",
-    department: "IT-отдел",
-    position: "Разработчик",
-    dailyHours: 8,
-    status: "working",
-    todayHours: 6.5,
-    email: "ivan.petrov@company.com"
-  },
-  {
-    id: 2,
-    name: "Мария Иванова",
-    department: "Дизайн",
-    position: "UI/UX Дизайнер",
-    dailyHours: 8,
-    status: "paused",
-    todayHours: 4.2,
-    email: "maria.ivanova@company.com"
-  },
-  {
-    id: 3,
-    name: "Алексей Сидоров",
-    department: "Маркетинг",
-    position: "Менеджер по маркетингу",
-    dailyHours: 8,
-    status: "offline",
-    todayHours: 8,
-    email: "alexey.sidorov@company.com"
-  },
-  {
-    id: 4,
-    name: "Елена Козлова",
-    department: "HR",
-    position: "HR-специалист",
-    dailyHours: 8,
-    status: "working",
-    todayHours: 5.8,
-    email: "elena.kozlova@company.com"
-  }
-];
-
 const EmployeeList = () => {
-  const [employees] = useState(mockEmployees);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  const fetchEmployees = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*');
+
+      if (error) {
+        throw error;
+      }
+
+      setEmployees(data || []);
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось загрузить список сотрудников",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  const handleEmployeeAdded = () => {
+    fetchEmployees();
+  };
+
+  const handleEmployeeDeleted = () => {
+    fetchEmployees();
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -93,7 +86,7 @@ const EmployeeList = () => {
   };
 
   const filteredEmployees = employees.filter(emp =>
-    emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    emp.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     emp.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
     emp.position.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -116,7 +109,7 @@ const EmployeeList = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1"
             />
-            <AddEmployeeDialog />
+            <AddEmployeeDialog onEmployeeAdded={handleEmployeeAdded} />
           </div>
         </CardContent>
       </Card>
@@ -131,63 +124,63 @@ const EmployeeList = () => {
                   <div className="w-12 h-12 bg-corporate-blue/10 rounded-full flex items-center justify-center">
                     <User className="w-6 h-6 text-corporate-blue" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold">{employee.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {employee.position} • {employee.department}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {employee.email}
-                    </p>
-                  </div>
-                </div>
+                   <div>
+                     <h3 className="font-semibold">{employee.full_name}</h3>
+                     <p className="text-sm text-muted-foreground">
+                       {employee.position} • {employee.department}
+                     </p>
+                     <p className="text-xs text-muted-foreground">
+                       {employee.email}
+                     </p>
+                   </div>
+                 </div>
 
-                <div className="flex items-center gap-6">
-                  {/* Статус */}
-                  <div className="text-center">
-                    <Badge className={`${getStatusColor(employee.status)} text-white`}>
-                      {getStatusLabel(employee.status)}
-                    </Badge>
-                  </div>
+                 <div className="flex items-center gap-6">
+                   {/* Статус */}
+                   <div className="text-center">
+                     <Badge variant="secondary">
+                       Сотрудник
+                     </Badge>
+                   </div>
 
-                  {/* Рабочие часы */}
-                  <div className="text-center">
-                    <div className="flex items-center gap-1 text-sm">
-                      <Clock className="w-4 h-4" />
-                      <span>{employee.todayHours}ч / {employee.dailyHours}ч</span>
-                    </div>
-                    <div className="w-20 bg-muted rounded-full h-2 mt-1">
-                      <div 
-                        className="bg-corporate-blue h-2 rounded-full transition-all"
-                        style={{ 
-                          width: `${Math.min((employee.todayHours / employee.dailyHours) * 100, 100)}%` 
-                        }}
-                      />
-                    </div>
-                  </div>
+                   {/* Рабочие часы */}
+                   <div className="text-center">
+                     <div className="flex items-center gap-1 text-sm">
+                       <Clock className="w-4 h-4" />
+                       <span>0ч / {employee.daily_hours || 8}ч</span>
+                     </div>
+                     <div className="w-20 bg-muted rounded-full h-2 mt-1">
+                       <div 
+                         className="bg-corporate-blue h-2 rounded-full transition-all"
+                         style={{ 
+                           width: `0%` 
+                         }}
+                       />
+                     </div>
+                   </div>
 
-                  {/* Действия */}
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => alert(`Настройка плана для ${employee.name}`)}
-                    >
-                      Настроить план
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => alert(`Назначение задачи для ${employee.name}`)}
-                    >
-                      Назначить задачу
-                    </Button>
-                    <DeleteEmployeeDialog 
-                      employeeId={employee.id.toString()}
-                      employeeName={employee.name}
-                      onEmployeeDeleted={() => alert(`${employee.name} удален`)}
-                    />
-                  </div>
+                   {/* Действия */}
+                   <div className="flex gap-2">
+                     <Button 
+                       variant="outline" 
+                       size="sm"
+                       onClick={() => alert(`Настройка плана для ${employee.full_name}`)}
+                     >
+                       Настроить план
+                     </Button>
+                     <Button 
+                       variant="outline" 
+                       size="sm"
+                       onClick={() => alert(`Назначение задачи для ${employee.full_name}`)}
+                     >
+                       Назначить задачу
+                     </Button>
+                     <DeleteEmployeeDialog 
+                       employeeId={employee.id}
+                       employeeName={employee.full_name}
+                       onEmployeeDeleted={handleEmployeeDeleted}
+                     />
+                   </div>
                 </div>
               </div>
             </CardContent>
