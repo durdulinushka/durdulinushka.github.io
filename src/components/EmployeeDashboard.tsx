@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ArrowUp, Clock, Pause, User } from "lucide-react";
 import TaskTracker from "@/components/TaskTracker";
+import { TaskCalendar } from "@/components/TaskCalendar";
 
 interface EmployeeDashboardProps {
   onBack: () => void;
@@ -97,8 +98,14 @@ const EmployeeDashboard = ({ onBack }: EmployeeDashboardProps) => {
           </CardContent>
         </Card>
 
-        {/* Трекер задач и времени */}
-        <TaskTracker dailyHours={mockEmployee.dailyHours} />
+        {/* Основная сетка */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Трекер задач и времени */}
+          <TaskTracker dailyHours={mockEmployee.dailyHours} />
+          
+          {/* Календарь задач */}
+          <TaskCalendar employeeId="current-user" />
+        </div>
       </div>
     </div>
   );
