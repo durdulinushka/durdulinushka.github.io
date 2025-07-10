@@ -1,14 +1,9 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { User, Clock, Calendar } from "lucide-react";
-import { AddEmployeeDialog } from "./AddEmployeeDialog";
-import { DeleteEmployeeDialog } from "./DeleteEmployeeDialog";
-import { EmployeePlanDialog } from "./EmployeePlanDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { EmployeeListHeader } from "./EmployeeListHeader";
+import { EmployeeCard } from "./EmployeeCard";
+import { EmptyEmployeeState } from "./EmptyEmployeeState";
 
 interface Employee {
   id: string;
@@ -64,141 +59,48 @@ const EmployeeList = () => {
     fetchEmployees();
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'working':
-        return 'bg-corporate-green';
-      case 'paused':
-        return 'bg-corporate-orange';
-      case 'offline':
-        return 'bg-muted';
-      default:
-        return 'bg-muted';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'working':
-        return 'В работе';
-      case 'paused':
-        return 'На паузе';
-      case 'offline':
-        return 'Не в сети';
-      default:
-        return status;
-    }
-  };
-
   const filteredEmployees = employees.filter(emp =>
     emp.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     emp.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
     emp.position.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-32 bg-muted rounded-lg mb-4"></div>
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-24 bg-muted rounded-lg"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Поиск и фильтры */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Управление сотрудниками</CardTitle>
-          <CardDescription>
-            Просмотр и управление сотрудниками компании
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4">
-            <Input
-              placeholder="Поиск сотрудников..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1"
-            />
-            <AddEmployeeDialog onEmployeeAdded={handleEmployeeAdded} />
-          </div>
-        </CardContent>
-      </Card>
+      <EmployeeListHeader
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onEmployeeAdded={handleEmployeeAdded}
+      />
 
       {/* Список сотрудников */}
       <div className="grid gap-4">
         {filteredEmployees.map((employee) => (
-          <Card key={employee.id}>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-corporate-blue/10 rounded-full flex items-center justify-center">
-                    <User className="w-6 h-6 text-corporate-blue" />
-                  </div>
-                   <div>
-                     <h3 className="font-semibold">{employee.full_name}</h3>
-                     <p className="text-sm text-muted-foreground">
-                       {employee.position} • {employee.department}
-                     </p>
-                     <p className="text-xs text-muted-foreground">
-                       {employee.email}
-                     </p>
-                   </div>
-                 </div>
-
-                 <div className="flex items-center gap-6">
-                   {/* Статус */}
-                   <div className="text-center">
-                     <Badge variant="secondary">
-                       Сотрудник
-                     </Badge>
-                   </div>
-
-                   {/* Рабочие часы */}
-                   <div className="text-center">
-                     <div className="flex items-center gap-1 text-sm">
-                       <Clock className="w-4 h-4" />
-                       <span>0ч / {employee.daily_hours || 8}ч</span>
-                     </div>
-                     <div className="w-20 bg-muted rounded-full h-2 mt-1">
-                       <div 
-                         className="bg-corporate-blue h-2 rounded-full transition-all"
-                         style={{ 
-                           width: `0%` 
-                         }}
-                       />
-                     </div>
-                   </div>
-
-                    {/* Действия */}
-                    <div className="flex gap-2">
-                      <EmployeePlanDialog 
-                        employee={employee}
-                        onPlanUpdated={handlePlanUpdated}
-                      />
-                     <Button 
-                       variant="outline" 
-                       size="sm"
-                       onClick={() => alert(`Назначение задачи для ${employee.full_name}`)}
-                     >
-                       Назначить задачу
-                     </Button>
-                     <DeleteEmployeeDialog 
-                       employeeId={employee.id}
-                       employeeName={employee.full_name}
-                       onEmployeeDeleted={handleEmployeeDeleted}
-                     />
-                   </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <EmployeeCard
+            key={employee.id}
+            employee={employee}
+            onEmployeeDeleted={handleEmployeeDeleted}
+            onPlanUpdated={handlePlanUpdated}
+          />
         ))}
       </div>
 
-      {filteredEmployees.length === 0 && (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <p className="text-muted-foreground">
-              Сотрудники не найдены
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      {filteredEmployees.length === 0 && !loading && <EmptyEmployeeState />}
     </div>
   );
 };
