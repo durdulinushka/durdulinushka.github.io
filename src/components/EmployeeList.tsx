@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { User, Clock, Calendar } from "lucide-react";
 import { AddEmployeeDialog } from "./AddEmployeeDialog";
 import { DeleteEmployeeDialog } from "./DeleteEmployeeDialog";
+import { EmployeePlanDialog } from "./EmployeePlanDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -56,6 +57,10 @@ const EmployeeList = () => {
   };
 
   const handleEmployeeDeleted = () => {
+    fetchEmployees();
+  };
+
+  const handlePlanUpdated = () => {
     fetchEmployees();
   };
 
@@ -159,15 +164,12 @@ const EmployeeList = () => {
                      </div>
                    </div>
 
-                   {/* Действия */}
-                   <div className="flex gap-2">
-                     <Button 
-                       variant="outline" 
-                       size="sm"
-                       onClick={() => alert(`Настройка плана для ${employee.full_name}`)}
-                     >
-                       Настроить план
-                     </Button>
+                    {/* Действия */}
+                    <div className="flex gap-2">
+                      <EmployeePlanDialog 
+                        employee={employee}
+                        onPlanUpdated={handlePlanUpdated}
+                      />
                      <Button 
                        variant="outline" 
                        size="sm"
