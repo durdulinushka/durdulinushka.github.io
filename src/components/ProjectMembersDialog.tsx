@@ -60,7 +60,7 @@ export const ProjectMembersDialog = ({
         .from('project_members')
         .select(`
           *,
-          profiles!project_members_employee_id_fkey (
+          profiles:project_members_employee_id_fkey (
             full_name,
             email,
             position,

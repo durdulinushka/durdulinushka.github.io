@@ -50,7 +50,7 @@ export const AddProjectTaskDialog = ({
         .select(`
           id,
           employee_id,
-          profiles!project_members_employee_id_fkey (
+          profiles:project_members_employee_id_fkey (
             full_name,
             position
           )

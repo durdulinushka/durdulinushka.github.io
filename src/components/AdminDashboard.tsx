@@ -6,6 +6,7 @@ import { Users, Calendar, User, Plus } from "lucide-react";
 import EmployeeList from "@/components/EmployeeList";
 import TaskManagement from "@/components/TaskManagement";
 import TaskCommentsAndDocs from "@/components/TaskCommentsAndDocs";
+import { ProjectManagement } from "./ProjectManagement";
 import { AddEmployeeDialog } from "./AddEmployeeDialog";
 
 interface AdminDashboardProps {
@@ -21,7 +22,7 @@ const mockStats = {
 };
 
 const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'tasks' | 'reports'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'projects' | 'tasks' | 'reports'>('overview');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted p-6">
@@ -52,6 +53,12 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             onClick={() => setActiveTab('employees')}
           >
             Сотрудники
+          </Button>
+          <Button 
+            variant={activeTab === 'projects' ? 'corporate' : 'ghost'}
+            onClick={() => setActiveTab('projects')}
+          >
+            Проекты
           </Button>
           <Button 
             variant={activeTab === 'tasks' ? 'corporate' : 'ghost'}
@@ -184,6 +191,9 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
 
         {/* Список сотрудников */}
         {activeTab === 'employees' && <EmployeeList />}
+
+        {/* Управление проектами */}
+        {activeTab === 'projects' && <ProjectManagement isAdmin={true} />}
 
         {/* Управление задачами */}
         {activeTab === 'tasks' && <TaskManagement />}
