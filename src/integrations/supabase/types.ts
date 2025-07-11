@@ -53,6 +53,69 @@ export type Database = {
         }
         Relationships: []
       }
+      project_members: {
+        Row: {
+          added_at: string
+          employee_id: string
+          id: string
+          project_id: string
+          role: string | null
+        }
+        Insert: {
+          added_at?: string
+          employee_id: string
+          id?: string
+          project_id: string
+          role?: string | null
+        }
+        Update: {
+          added_at?: string
+          employee_id?: string
+          id?: string
+          project_id?: string
+          role?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string
+          creator_id: string
+          department: string
+          description: string | null
+          end_date: string | null
+          id: string
+          name: string
+          start_date: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          department: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name: string
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          department?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name?: string
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       task_comments: {
         Row: {
           author_id: string
@@ -155,6 +218,7 @@ export type Database = {
           id: string
           planned_date: string | null
           priority: string | null
+          project_id: string | null
           status: string | null
           task_type: string | null
           title: string
@@ -171,6 +235,7 @@ export type Database = {
           id?: string
           planned_date?: string | null
           priority?: string | null
+          project_id?: string | null
           status?: string | null
           task_type?: string | null
           title: string
@@ -187,6 +252,7 @@ export type Database = {
           id?: string
           planned_date?: string | null
           priority?: string | null
+          project_id?: string | null
           status?: string | null
           task_type?: string | null
           title?: string
