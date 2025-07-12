@@ -54,7 +54,7 @@ export const ProjectTasksDialog = ({
         .from('tasks')
         .select(`
           *,
-          profiles:tasks_assignee_id_fkey (
+          profiles!assignee_id (
             full_name,
             avatar_url
           )
