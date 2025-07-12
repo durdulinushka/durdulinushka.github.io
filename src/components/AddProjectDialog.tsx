@@ -49,13 +49,25 @@ export const AddProjectDialog = ({ open, onOpenChange, onProjectAdded }: AddProj
 
     setLoading(true);
     try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Ошибка",
+          description: "Пользователь не авторизован",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('projects')
         .insert({
           name: formData.name.trim(),
           description: formData.description.trim() || null,
           department: formData.department,
-          creator_id: 'current-user', // TODO: Replace with actual user ID
+          creator_id: user.id,
           start_date: formData.start_date || null,
           end_date: formData.end_date || null,
         });
