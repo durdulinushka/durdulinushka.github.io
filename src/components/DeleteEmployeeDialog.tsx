@@ -19,13 +19,54 @@ export const DeleteEmployeeDialog = ({ employeeId, employeeName, onEmployeeDelet
     setLoading(true);
 
     try {
-      const { error } = await supabase
+      // Сначала снимаем назначение задач с удаляемого сотрудника
+      const { error: tasksError } = await supabase
+        .from('tasks')
+        .update({ assignee_id: null })
+        .eq('assignee_id', employeeId);
+
+      if (tasksError) {
+        throw new Error(`Ошибка при обновлении задач: ${tasksError.message}`);
+      }
+
+      // Также снимаем назначение задач созданных этим сотрудником
+      const { error: creatorTasksError } = await supabase
+        .from('tasks')
+        .update({ creator_id: null })
+        .eq('creator_id', employeeId);
+
+      if (creatorTasksError) {
+        throw new Error(`Ошибка при обновлении задач создателя: ${creatorTasksError.message}`);
+      }
+
+      // Удаляем записи времени сотрудника
+      const { error: timeTrackingError } = await supabase
+        .from('time_tracking')
+        .delete()
+        .eq('employee_id', employeeId);
+
+      if (timeTrackingError) {
+        throw new Error(`Ошибка при удалении записей времени: ${timeTrackingError.message}`);
+      }
+
+      // Удаляем сотрудника из проектов
+      const { error: projectMembersError } = await supabase
+        .from('project_members')
+        .delete()
+        .eq('employee_id', employeeId);
+
+      if (projectMembersError) {
+        throw new Error(`Ошибка при удалении из проектов: ${projectMembersError.message}`);
+      }
+
+      // Теперь можно безопасно удалить профиль
+      const { error: profileError } = await supabase
         .from('profiles')
         .delete()
         .eq('id', employeeId);
 
-      if (error) {
-        throw error;
+      if (profileError) {
+        throw new Error(`Ошибка при удалении профиля: ${profileError.message}`);
       }
 
       toast({
@@ -38,7 +79,7 @@ export const DeleteEmployeeDialog = ({ employeeId, employeeName, onEmployeeDelet
       console.error('Error deleting employee:', error);
       toast({
         title: "Ошибка",
-        description: "Не удалось удалить сотрудника",
+        description: error instanceof Error ? error.message : "Не удалось удалить сотрудника",
         variant: "destructive",
       });
     } finally {
@@ -58,7 +99,7 @@ export const DeleteEmployeeDialog = ({ employeeId, employeeName, onEmployeeDelet
           <AlertDialogTitle>Удалить сотрудника</AlertDialogTitle>
           <AlertDialogDescription>
             Вы уверены, что хотите удалить <strong>{employeeName}</strong> из системы? 
-            Это действие нельзя отменить. Все связанные данные (задачи, отчеты времени) также будут удалены.
+            Это действие нельзя отменить. Все связанные данные (назначенные задачи, записи времени, участие в проектах) будут удалены или переназначены.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
