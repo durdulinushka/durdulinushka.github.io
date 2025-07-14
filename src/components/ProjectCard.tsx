@@ -8,6 +8,7 @@ import { ru } from "date-fns/locale";
 import { Project } from "./ProjectManagement";
 import { ProjectMembersDialog } from "./ProjectMembersDialog";
 import { ProjectTasksDialog } from "./ProjectTasksDialog";
+import { DeleteProjectDialog } from "./DeleteProjectDialog";
 
 interface ProjectCardProps {
   project: Project;
@@ -101,6 +102,13 @@ export const ProjectCard = ({ project, isAdmin, onUpdate }: ProjectCardProps) =>
               <Plus className="w-4 h-4" />
               Задачи
             </Button>
+            {isAdmin && (
+              <DeleteProjectDialog
+                projectId={project.id}
+                projectName={project.name}
+                onProjectDeleted={onUpdate}
+              />
+            )}
           </div>
         </CardContent>
       </Card>

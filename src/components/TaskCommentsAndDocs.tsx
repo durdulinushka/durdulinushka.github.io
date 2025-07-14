@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, FileText, Download, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MessageCircle, FileText, Download, User, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface TaskComment {
   id: string;
@@ -45,6 +47,7 @@ const TaskCommentsAndDocs = () => {
   const [documents, setDocuments] = useState<TaskDocument[]>([]);
   const [tasks, setTasks] = useState<TaskWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     loadData();
@@ -124,6 +127,56 @@ const TaskCommentsAndDocs = () => {
     }
   };
 
+  const deleteComment = async (commentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('task_comments')
+        .delete()
+        .eq('id', commentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Успешно",
+        description: "Комментарий удален",
+      });
+
+      loadData(); // Перезагружаем данные
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось удалить комментарий",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteDocument = async (documentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('task_documents')
+        .delete()
+        .eq('id', documentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Успешно",
+        description: "Документ удален",
+      });
+
+      loadData(); // Перезагружаем данные
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось удалить документ",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -173,6 +226,14 @@ const TaskCommentsAndDocs = () => {
                     </h4>
                     <p className="text-sm">{comment.content}</p>
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => deleteComment(comment.id)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>
@@ -226,13 +287,23 @@ const TaskCommentsAndDocs = () => {
                       <span className="text-sm">{document.file_name}</span>
                     </div>
                   </div>
-                  <button
-                    onClick={() => downloadFile(document.file_url, document.file_name)}
-                    className="p-2 hover:bg-muted rounded-md transition-colors"
-                    title="Скачать файл"
-                  >
-                    <Download className="w-4 h-4" />
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => downloadFile(document.file_url, document.file_name)}
+                      className="p-2 hover:bg-muted rounded-md transition-colors"
+                      title="Скачать файл"
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => deleteDocument(document.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <div className="flex gap-4">

@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { MessageCircle, FileText } from "lucide-react";
+import { DeleteTaskDialog } from "./DeleteTaskDialog";
 
 interface Task {
   id: string;
@@ -21,9 +22,11 @@ interface TaskActionsProps {
   currentTask: Task;
   onAddComment: (content: string) => Promise<void>;
   onUploadDocument: (file: File) => Promise<void>;
+  onTaskDeleted?: () => void;
+  isAdmin?: boolean;
 }
 
-const TaskActions = ({ currentTask, onAddComment, onUploadDocument }: TaskActionsProps) => {
+const TaskActions = ({ currentTask, onAddComment, onUploadDocument, onTaskDeleted, isAdmin }: TaskActionsProps) => {
   const [commentContent, setCommentContent] = useState("");
   const [documentFile, setDocumentFile] = useState<File | null>(null);
 
@@ -40,7 +43,7 @@ const TaskActions = ({ currentTask, onAddComment, onUploadDocument }: TaskAction
   };
 
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid grid-cols-3 gap-2">
       <Dialog>
         <DialogTrigger asChild>
           <Button variant="outline" size="sm">
@@ -102,6 +105,14 @@ const TaskActions = ({ currentTask, onAddComment, onUploadDocument }: TaskAction
           </div>
         </DialogContent>
       </Dialog>
+
+      {isAdmin && (
+        <DeleteTaskDialog
+          taskId={currentTask.id}
+          taskTitle={currentTask.title}
+          onTaskDeleted={onTaskDeleted}
+        />
+      )}
     </div>
   );
 };
