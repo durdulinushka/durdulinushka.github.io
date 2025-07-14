@@ -175,39 +175,45 @@ export const ProjectMembersDialog = ({
 
         <div className="space-y-6">
           {/* Add new member section */}
-          {isAdmin && availableEmployees.length > 0 && (
+          {isAdmin && (
             <div className="border rounded-lg p-4 space-y-4">
               <h4 className="font-medium">Добавить участника</h4>
-              <div className="flex gap-2">
-                <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Выберите сотрудника" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableEmployees.map((employee) => (
-                      <SelectItem key={employee.id} value={employee.id}>
-                        {employee.full_name} - {employee.position}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={selectedRole} onValueChange={setSelectedRole}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="member">Участник</SelectItem>
-                    <SelectItem value="leader">Руководитель</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  onClick={handleAddMember}
-                  disabled={!selectedEmployee || loading}
-                  size="sm"
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
+              {availableEmployees.length > 0 ? (
+                <div className="flex gap-2">
+                  <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Выберите сотрудника" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableEmployees.map((employee) => (
+                        <SelectItem key={employee.id} value={employee.id}>
+                          {employee.full_name} - {employee.position}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={selectedRole} onValueChange={setSelectedRole}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="member">Участник</SelectItem>
+                      <SelectItem value="leader">Руководитель</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    onClick={handleAddMember}
+                    disabled={!selectedEmployee || loading}
+                    size="sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  Все сотрудники отдела уже добавлены в проект
+                </p>
+              )}
             </div>
           )}
 
