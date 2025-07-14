@@ -80,8 +80,7 @@ export const ProjectMembersDialog = ({
     try {
       const { data: allEmployees, error } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('department', project.department);
+        .select('*');
 
       if (error) throw error;
 
@@ -104,7 +103,7 @@ export const ProjectMembersDialog = ({
     if (members.length >= 0) {
       fetchAvailableEmployees();
     }
-  }, [members, project.department]);
+  }, [members]);
 
   const handleAddMember = async () => {
     if (!selectedEmployee) return;
@@ -187,7 +186,7 @@ export const ProjectMembersDialog = ({
                     <SelectContent>
                       {availableEmployees.map((employee) => (
                         <SelectItem key={employee.id} value={employee.id}>
-                          {employee.full_name} - {employee.position}
+                          {employee.full_name} - {employee.position} ({employee.department})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -211,7 +210,7 @@ export const ProjectMembersDialog = ({
                 </div>
               ) : (
                 <p className="text-muted-foreground text-sm">
-                  Все сотрудники отдела уже добавлены в проект
+                  Все сотрудники уже добавлены в проект
                 </p>
               )}
             </div>
