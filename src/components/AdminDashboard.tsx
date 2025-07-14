@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,21 +8,95 @@ import TaskManagement from "@/components/TaskManagement";
 import TaskCommentsAndDocs from "@/components/TaskCommentsAndDocs";
 import { ProjectManagement } from "./ProjectManagement";
 import { AddEmployeeDialog } from "./AddEmployeeDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface AdminDashboardProps {
   onBack: () => void;
 }
 
-// Моковые данные
-const mockStats = {
-  totalEmployees: 12,
-  activeToday: 8,
-  pendingTasks: 15,
-  completedToday: 7
-};
+interface Stats {
+  totalEmployees: number;
+  activeToday: number;
+  pendingTasks: number;
+  completedToday: number;
+}
 
 const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'projects' | 'tasks' | 'reports'>('overview');
+  const [stats, setStats] = useState<Stats>({
+    totalEmployees: 0,
+    activeToday: 0,
+    pendingTasks: 0,
+    completedToday: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      
+      // Получаем общее количество сотрудников
+      const { data: employees, error: employeesError } = await supabase
+        .from('profiles')
+        .select('id');
+
+      if (employeesError) throw employeesError;
+
+      // Получаем количество активных сотрудников сегодня (тех, кто логинился сегодня)
+      const today = new Date().toISOString().split('T')[0];
+      const { data: activeEmployees, error: activeError } = await supabase
+        .from('time_tracking')
+        .select('employee_id')
+        .eq('date', today)
+        .not('login_time', 'is', null);
+
+      if (activeError) throw activeError;
+
+      // Получаем количество задач в ожидании
+      const { data: pendingTasks, error: pendingError } = await supabase
+        .from('tasks')
+        .select('id')
+        .in('status', ['pending', 'in_progress']);
+
+      if (pendingError) throw pendingError;
+
+      // Получаем количество задач, выполненных сегодня
+      const { data: completedTasks, error: completedError } = await supabase
+        .from('tasks')
+        .select('id')
+        .eq('status', 'completed')
+        .gte('completed_at', `${today}T00:00:00.000Z`)
+        .lt('completed_at', `${today}T23:59:59.999Z`);
+
+      if (completedError) throw completedError;
+
+      // Уникальные активные сотрудники
+      const uniqueActiveEmployees = [...new Set(activeEmployees?.map(emp => emp.employee_id) || [])];
+
+      setStats({
+        totalEmployees: employees?.length || 0,
+        activeToday: uniqueActiveEmployees.length,
+        pendingTasks: pendingTasks?.length || 0,
+        completedToday: completedTasks?.length || 0
+      });
+
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось загрузить статистику",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted p-6">
@@ -87,7 +161,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-corporate-blue">
-                    {mockStats.totalEmployees}
+                    {loading ? "..." : stats.totalEmployees}
                   </div>
                 </CardContent>
               </Card>
@@ -100,7 +174,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-corporate-green">
-                    {mockStats.activeToday}
+                    {loading ? "..." : stats.activeToday}
                   </div>
                 </CardContent>
               </Card>
@@ -113,7 +187,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-corporate-orange">
-                    {mockStats.pendingTasks}
+                    {loading ? "..." : stats.pendingTasks}
                   </div>
                 </CardContent>
               </Card>
@@ -126,7 +200,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-corporate-green">
-                    {mockStats.completedToday}
+                    {loading ? "..." : stats.completedToday}
                   </div>
                 </CardContent>
               </Card>
