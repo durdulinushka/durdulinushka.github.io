@@ -6,9 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calendar, Plus, User, Bell, Upload, MessageSquare, Edit } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar, Plus, User, Bell, Upload, MessageSquare, Edit, Archive, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { EditTaskDialog } from "./EditTaskDialog";
+import { TaskArchive } from "./TaskArchive";
+import { format, isToday, isYesterday, parseISO } from "date-fns";
+import { ru } from "date-fns/locale";
 
 interface Task {
   id: string;
@@ -22,6 +27,8 @@ interface Task {
   status: 'pending' | 'in-progress' | 'completed';
   department: string;
   created_at: string;
+  viewed_by: string[];
+  archived: boolean;
 }
 
 interface Profile {
@@ -65,6 +72,7 @@ const TaskManagement = () => {
           *,
           assignee:profiles!tasks_assignee_id_fkey(full_name)
         `)
+        .eq('archived', false)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -80,7 +88,9 @@ const TaskManagement = () => {
         due_date: task.due_date,
         status: task.status as 'pending' | 'in-progress' | 'completed',
         department: task.department,
-        created_at: task.created_at
+        created_at: task.created_at,
+        viewed_by: Array.isArray(task.viewed_by) ? task.viewed_by : [],
+        archived: task.archived || false
       })) || [];
 
       setTasks(formattedTasks);
