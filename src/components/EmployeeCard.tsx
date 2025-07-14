@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { User, Clock } from "lucide-react";
 import { DeleteEmployeeDialog } from "./DeleteEmployeeDialog";
 import { EmployeePlanDialog } from "./EmployeePlanDialog";
+import { EditEmployeeNameDialog } from "./EditEmployeeNameDialog";
+import { ManageAdminRoleDialog } from "./ManageAdminRoleDialog";
 
 interface Employee {
   id: string;
@@ -12,15 +14,17 @@ interface Employee {
   position: string;
   daily_hours: number;
   email: string;
+  role?: string;
 }
 
 interface EmployeeCardProps {
   employee: Employee;
   onEmployeeDeleted: () => void;
   onPlanUpdated: () => void;
+  onEmployeeUpdated: () => void;
 }
 
-export const EmployeeCard = ({ employee, onEmployeeDeleted, onPlanUpdated }: EmployeeCardProps) => {
+export const EmployeeCard = ({ employee, onEmployeeDeleted, onPlanUpdated, onEmployeeUpdated }: EmployeeCardProps) => {
   return (
     <Card key={employee.id} className="animate-fade-in">
       <CardContent className="p-6">
@@ -43,8 +47,8 @@ export const EmployeeCard = ({ employee, onEmployeeDeleted, onPlanUpdated }: Emp
           <div className="flex items-center gap-6">
             {/* Статус */}
             <div className="text-center">
-              <Badge variant="secondary">
-                Сотрудник
+              <Badge variant={employee.role === 'admin' ? "default" : "secondary"}>
+                {employee.role === 'admin' ? 'Администратор' : 'Сотрудник'}
               </Badge>
             </div>
 
@@ -66,6 +70,17 @@ export const EmployeeCard = ({ employee, onEmployeeDeleted, onPlanUpdated }: Emp
 
             {/* Действия */}
             <div className="flex gap-2">
+              <EditEmployeeNameDialog
+                employeeId={employee.id}
+                currentName={employee.full_name}
+                onNameUpdated={onEmployeeUpdated}
+              />
+              <ManageAdminRoleDialog
+                employeeId={employee.id}
+                employeeName={employee.full_name}
+                currentRole={employee.role || 'employee'}
+                onRoleUpdated={onEmployeeUpdated}
+              />
               <EmployeePlanDialog 
                 employee={employee}
                 onPlanUpdated={onPlanUpdated}

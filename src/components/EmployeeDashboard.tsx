@@ -5,52 +5,61 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowUp, Clock, Pause, User } from "lucide-react";
 import TaskTracker from "@/components/TaskTracker";
 import { TaskCalendar } from "@/components/TaskCalendar";
+import { EditProfileNameDialog } from "@/components/EditProfileNameDialog";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EmployeeDashboardProps {
   onBack: () => void;
 }
 
-// Моковые данные сотрудника
-const mockEmployee = {
-  name: "Иван Петров",
-  department: "IT-отдел",
-  position: "Разработчик",
-  dailyHours: 8,
-  currentTasks: [
-    {
-      id: 1,
-      title: "Исправить баг в модуле авторизации",
-      priority: "high" as const,
-      type: "urgent" as const,
-      dueDate: "2025-01-07",
-      status: "in-progress" as const
-    },
-    {
-      id: 2,
-      title: "Написать документацию к API",
-      priority: "medium" as const,
-      type: "daily" as const,
-      dueDate: "2025-01-07",
-      status: "pending" as const
-    },
-    {
-      id: 3,
-      title: "Провести код-ревью",
-      priority: "low" as const,
-      type: "long-term" as const,
-      dueDate: "2025-01-10",
-      status: "pending" as const
-    }
-  ]
-};
+interface Employee {
+  name: string;
+  department: string;
+  position: string;
+  dailyHours: number;
+}
 
 const EmployeeDashboard = ({ onBack }: EmployeeDashboardProps) => {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [employee, setEmployee] = useState<Employee>({
+    name: "Загрузка...",
+    department: "Загрузка...",
+    position: "Загрузка...",
+    dailyHours: 8
+  });
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('full_name, department, position, daily_hours')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (data) {
+          setEmployee({
+            name: data.full_name,
+            department: data.department,
+            position: data.position,
+            dailyHours: data.daily_hours || 8
+          });
+        }
+      }
+    };
+
+    getCurrentUser();
+  }, []);
+
+  const handleNameUpdated = (newName: string) => {
+    setEmployee(prev => ({ ...prev, name: newName }));
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted p-6">
@@ -76,23 +85,26 @@ const EmployeeDashboard = ({ onBack }: EmployeeDashboardProps) => {
         {/* Профиль сотрудника */}
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-corporate-blue/10 rounded-full flex items-center justify-center">
-                <User className="w-6 h-6 text-corporate-blue" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-corporate-blue/10 rounded-full flex items-center justify-center">
+                  <User className="w-6 h-6 text-corporate-blue" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">{employee.name}</CardTitle>
+                  <CardDescription>
+                    {employee.position} • {employee.department}
+                  </CardDescription>
+                </div>
               </div>
-              <div>
-                <CardTitle className="text-xl">{mockEmployee.name}</CardTitle>
-                <CardDescription>
-                  {mockEmployee.position} • {mockEmployee.department}
-                </CardDescription>
-              </div>
+              <EditProfileNameDialog onNameUpdated={handleNameUpdated} />
             </div>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
-                Рабочий день: {mockEmployee.dailyHours} часов
+                Рабочий день: {employee.dailyHours} часов
               </div>
             </div>
           </CardContent>
@@ -101,7 +113,7 @@ const EmployeeDashboard = ({ onBack }: EmployeeDashboardProps) => {
         {/* Основная сетка */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Трекер задач и времени */}
-          <TaskTracker dailyHours={mockEmployee.dailyHours} />
+          <TaskTracker dailyHours={employee.dailyHours} />
           
           {/* Календарь задач */}
           <TaskCalendar employeeId="current-user" />

@@ -12,6 +12,7 @@ interface Employee {
   position: string;
   daily_hours: number;
   email: string;
+  role?: string;
 }
 
 const EmployeeList = () => {
@@ -59,6 +60,10 @@ const EmployeeList = () => {
     fetchEmployees();
   };
 
+  const handleEmployeeUpdated = () => {
+    fetchEmployees();
+  };
+
   const filteredEmployees = employees.filter(emp =>
     emp.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     emp.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -96,6 +101,7 @@ const EmployeeList = () => {
             employee={employee}
             onEmployeeDeleted={handleEmployeeDeleted}
             onPlanUpdated={handlePlanUpdated}
+            onEmployeeUpdated={handleEmployeeUpdated}
           />
         ))}
       </div>
