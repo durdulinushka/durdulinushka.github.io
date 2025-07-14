@@ -61,6 +61,37 @@ export const AddProjectDialog = ({ open, onOpenChange, onProjectAdded }: AddProj
         return;
       }
 
+      // Check if user profile exists, create if not
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile) {
+        // Create profile for current user
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            user_id: user.id,
+            full_name: user.email,
+            email: user.email,
+            department: 'Не указан',
+            position: 'Сотрудник'
+          });
+
+        if (profileError) {
+          console.error('Error creating profile:', profileError);
+          toast({
+            title: "Ошибка",
+            description: "Не удалось создать профиль пользователя",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from('projects')
         .insert({
