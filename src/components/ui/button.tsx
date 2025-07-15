@@ -20,8 +20,8 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         corporate: "bg-corporate-green text-primary-foreground shadow-lg hover:bg-corporate-green/90 transform hover:scale-105 transition-all",
         success: "bg-corporate-green text-primary-foreground shadow-lg hover:bg-corporate-green/90",
-        warning: "bg-corporate-orange text-primary-foreground shadow-lg hover:bg-corporate-orange/90",
-        danger: "bg-corporate-red text-primary-foreground shadow-lg hover:bg-corporate-red/90"
+        warning: "bg-corporate-sage text-primary-foreground shadow-lg hover:bg-corporate-sage/90",
+        danger: "bg-corporate-blue text-primary-foreground shadow-lg hover:bg-corporate-blue/90"
       },
       size: {
         default: "h-10 px-4 py-2",

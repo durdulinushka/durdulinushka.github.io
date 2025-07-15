@@ -56,8 +56,9 @@ export default {
 					blue: 'hsl(var(--corporate-blue))',
 					'blue-dark': 'hsl(var(--corporate-blue-dark))',
 					green: 'hsl(var(--corporate-green))',
-					orange: 'hsl(var(--corporate-orange))',
-					red: 'hsl(var(--corporate-red))'
+					teal: 'hsl(var(--corporate-teal))',
+					sage: 'hsl(var(--corporate-sage))',
+					mist: 'hsl(var(--corporate-mist))'
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',

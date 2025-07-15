@@ -143,7 +143,7 @@ const EmployeeHoursCalendar = ({ employeeId }: EmployeeHoursCalendarProps) => {
       case 'working':
         return 'bg-corporate-blue text-white';
       case 'paused':
-        return 'bg-corporate-orange text-white';
+        return 'bg-corporate-sage text-white';
       default:
         return 'bg-muted text-muted-foreground';
     }

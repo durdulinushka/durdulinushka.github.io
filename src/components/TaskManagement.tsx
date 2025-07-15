@@ -227,9 +227,9 @@ const TaskManagement = () => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'bg-corporate-red';
+        return 'bg-corporate-blue';
       case 'medium':
-        return 'bg-corporate-orange';
+        return 'bg-corporate-teal';
       case 'low':
         return 'bg-corporate-green';
       default:
@@ -307,7 +307,7 @@ const TaskManagement = () => {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-corporate-orange">{taskStats.pending}</div>
+            <div className="text-2xl font-bold text-corporate-sage">{taskStats.pending}</div>
             <div className="text-sm text-muted-foreground">Ожидают</div>
           </CardContent>
         </Card>
@@ -532,7 +532,7 @@ const TaskManagement = () => {
                       className={
                         task.status === 'completed' ? 'bg-corporate-green text-white' :
                         task.status === 'in-progress' ? 'bg-corporate-blue text-white' :
-                        'bg-corporate-orange text-white'
+                        'bg-corporate-sage text-white'
                       }
                     >
                       {getStatusLabel(task.status)}

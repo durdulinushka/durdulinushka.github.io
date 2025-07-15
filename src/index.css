@@ -29,23 +29,25 @@ All colors MUST be HSL.
     --accent: 220 14.3% 95.9%;
     --accent-foreground: 220.9 39.3% 11%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 187 85% 43%; /* Заменяем красный на темно-бирюзовый */
     --destructive-foreground: 210 20% 98%;
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
     --ring: 224 71.4% 4.1%;
 
-    /* Корпоративные цвета */
-    --corporate-blue: 213 94% 68%;
-    --corporate-blue-dark: 213 94% 58%;
-    --corporate-green: 142 76% 36%;
-    --corporate-orange: 25 95% 53%;
-    --corporate-red: 0 84% 60%;
+    /* Корпоративные цвета - морская палитра */
+    --corporate-blue: 187 85% 43%; /* Темно-бирюзовый */
+    --corporate-blue-dark: 187 85% 33%;
+    --corporate-green: 174 50% 47%; /* Бирюзовый */
+    --corporate-teal: 183 41% 67%; /* Светло-бирюзовый */
+    --corporate-sage: 194 22% 56%; /* Серо-голубой */
+    --corporate-mist: 207 26% 83%; /* Светло-серый с голубым */
     
     /* Градиенты */
-    --gradient-primary: linear-gradient(135deg, hsl(213 94% 68%), hsl(213 94% 58%));
-    --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 46%));
+    --gradient-primary: linear-gradient(135deg, hsl(187 85% 43%), hsl(174 50% 47%));
+    --gradient-success: linear-gradient(135deg, hsl(174 50% 47%), hsl(183 41% 67%));
+    --gradient-accent: linear-gradient(135deg, hsl(183 41% 67%), hsl(207 26% 83%));
     
     /* Тени */
     --shadow-corporate: 0 4px 20px -2px hsl(213 94% 68% / 0.15);

@@ -121,7 +121,7 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
       case 'in_progress':
         return 'bg-corporate-blue text-white';
       case 'pending':
-        return 'bg-corporate-orange text-white';
+        return 'bg-corporate-sage text-white';
       default:
         return 'bg-muted text-muted-foreground';
     }
@@ -130,11 +130,11 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'border-l-4 border-l-red-500';
+        return 'border-l-4 border-l-corporate-blue';
       case 'medium':
-        return 'border-l-4 border-l-yellow-500';
+        return 'border-l-4 border-l-corporate-teal';
       case 'low':
-        return 'border-l-4 border-l-green-500';
+        return 'border-l-4 border-l-corporate-green';
       default:
         return 'border-l-4 border-l-gray-300';
     }

@@ -87,7 +87,7 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted">
         {/* Индикатор режима администратора */}
-        <div className="bg-corporate-orange text-white p-2 text-center">
+        <div className="bg-corporate-sage text-white p-2 text-center">
           <span className="text-sm">
             Режим администратора - Вы просматриваете систему как: {impersonatedEmployeeName}
           </span>
