@@ -3,7 +3,8 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isTod
 import { ru } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Calendar } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 import { DayCell } from "./DayCell";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +28,7 @@ export const TaskCalendar = ({ employeeId }: TaskCalendarProps) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const { toast } = useToast();
 
   const monthStart = startOfMonth(currentDate);
@@ -68,8 +70,8 @@ export const TaskCalendar = ({ employeeId }: TaskCalendarProps) => {
         .from('tasks')
         .select('*')
         .eq('assignee_id', targetEmployeeId)
-        .gte('planned_date', format(monthStart, 'yyyy-MM-dd'))
-        .lte('planned_date', format(monthEnd, 'yyyy-MM-dd'));
+        .or(`planned_date.gte.${format(monthStart, 'yyyy-MM-dd')},due_date.gte.${format(monthStart, 'yyyy-MM-dd')}`)
+        .or(`planned_date.lte.${format(monthEnd, 'yyyy-MM-dd')},due_date.lte.${format(monthEnd, 'yyyy-MM-dd')}`);;
 
       if (error) throw error;
       setTasks(data || []);
@@ -120,7 +122,17 @@ export const TaskCalendar = ({ employeeId }: TaskCalendarProps) => {
 
   const getTasksForDate = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    return tasks.filter(task => task.planned_date === dateStr);
+    return tasks.filter(task => 
+      task.planned_date === dateStr || task.due_date === dateStr
+    );
+  };
+
+  const getTotalTasksForMonth = () => {
+    return tasks.length;
+  };
+
+  const getCompletedTasksForMonth = () => {
+    return tasks.filter(task => task.status === 'completed').length;
   };
 
   const goToPreviousMonth = () => setCurrentDate(subMonths(currentDate, 1));
@@ -148,54 +160,89 @@ export const TaskCalendar = ({ employeeId }: TaskCalendarProps) => {
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Календарь задач</CardTitle>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToPreviousMonth}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <span className="text-lg font-medium min-w-[140px] text-center">
-              {format(currentDate, 'LLLL yyyy', { locale: ru })}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToNextMonth}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {/* Заголовки дней недели */}
-        <div className="grid grid-cols-7 gap-2 mb-2">
-          {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
-            <div key={day} className="text-center text-sm font-medium text-muted-foreground p-2">
-              {day}
+      <Collapsible open={!isCollapsed} onOpenChange={(open) => setIsCollapsed(!open)}>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              <CardTitle>Календарь задач</CardTitle>
+              {isCollapsed && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>({getTotalTasksForMonth()} задач, {getCompletedTasksForMonth()} выполнено)</span>
+                </div>
+              )}
             </div>
-          ))}
-        </div>
+            <div className="flex items-center gap-2">
+              {!isCollapsed && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={goToPreviousMonth}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <span className="text-lg font-medium min-w-[140px] text-center">
+                    {format(currentDate, 'LLLL yyyy', { locale: ru })}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={goToNextMonth}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </>
+              )}
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  {isCollapsed ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronUp className="w-4 h-4" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+            </div>
+          </div>
+        </CardHeader>
+        
+        <CollapsibleContent>
+          <CardContent>
+            {/* Заголовки дней недели */}
+            <div className="grid grid-cols-7 gap-2 mb-2">
+              {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
+                <div key={day} className="text-center text-sm font-medium text-muted-foreground p-2">
+                  {day}
+                </div>
+              ))}
+            </div>
 
-        {/* Календарная сетка */}
-        <div className="grid grid-cols-7 gap-2">
-          {calendarDays.map((date, index) => (
-            <DayCell
-              key={index}
-              date={date}
-              tasks={getTasksForDate(date)}
-              isCurrentMonth={isSameMonth(date, currentDate)}
-              isToday={isToday(date)}
-              onTaskMove={handleTaskMove}
-            />
-          ))}
-        </div>
-      </CardContent>
+            {/* Календарная сетка */}
+            <div className="grid grid-cols-7 gap-2">
+              {calendarDays.map((date, index) => (
+                <DayCell
+                  key={index}
+                  date={date}
+                  tasks={getTasksForDate(date)}
+                  isCurrentMonth={isSameMonth(date, currentDate)}
+                  isToday={isToday(date)}
+                  onTaskMove={handleTaskMove}
+                />
+              ))}
+            </div>
+
+            {/* Статистика месяца */}
+            <div className="mt-4 pt-4 border-t">
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>Всего задач в месяце: {getTotalTasksForMonth()}</span>
+                <span>Выполнено: {getCompletedTasksForMonth()}</span>
+                <span>В работе: {getTotalTasksForMonth() - getCompletedTasksForMonth()}</span>
+              </div>
+            </div>
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
     </Card>
   );
 };

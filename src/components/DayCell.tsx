@@ -17,10 +17,19 @@ export const DayCell = ({ date, tasks, isCurrentMonth, isToday, onTaskMove }: Da
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-500/20 text-red-700 border-red-200';
-      case 'medium': return 'bg-yellow-500/20 text-yellow-700 border-yellow-200';
-      case 'low': return 'bg-green-500/20 text-green-700 border-green-200';
+      case 'high': return 'bg-corporate-red/20 text-red-700 border-red-200';
+      case 'medium': return 'bg-corporate-orange/20 text-orange-700 border-orange-200';
+      case 'low': return 'bg-corporate-green/20 text-green-700 border-green-200';
       default: return 'bg-muted text-muted-foreground border-border';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed': return '✓';
+      case 'in-progress': return '⚡';
+      case 'pending': return '⏳';
+      default: return '';
     }
   };
 
@@ -62,21 +71,30 @@ export const DayCell = ({ date, tasks, isCurrentMonth, isToday, onTaskMove }: Da
             draggable
             onDragStart={(e) => e.dataTransfer.setData('text/plain', task.id)}
             className={cn(
-              "text-xs p-1 rounded border cursor-move hover:opacity-80 transition-opacity",
+              "text-xs p-1.5 rounded border cursor-move hover:opacity-80 transition-opacity relative",
               getPriorityColor(task.priority)
             )}
-            title={task.description || task.title}
+            title={`${task.title}${task.description ? '\n' + task.description : ''}`}
           >
-            <div className="truncate font-medium">{task.title}</div>
+            <div className="flex items-center justify-between gap-1">
+              <div className="truncate font-medium flex-1">{task.title}</div>
+              <span className="text-xs opacity-70">{getStatusIcon(task.status)}</span>
+            </div>
             {task.status === 'completed' && (
-              <div className="text-xs opacity-60">✓ Выполнено</div>
+              <div className="absolute inset-0 bg-muted/20 rounded border-dashed"></div>
             )}
           </div>
         ))}
         
         {tasks.length > 3 && (
-          <div className="text-xs text-muted-foreground text-center py-1">
+          <div className="text-xs text-muted-foreground text-center py-1 bg-muted/30 rounded border border-dashed">
             +{tasks.length - 3} ещё
+          </div>
+        )}
+        
+        {tasks.length === 0 && (
+          <div className="text-xs text-muted-foreground/50 text-center py-4 border-2 border-dashed border-muted/30 rounded-lg">
+            Перетащите задачу
           </div>
         )}
       </div>
