@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from "lucide-react";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus, Clock, User, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, isSameMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -16,6 +17,7 @@ interface EmployeeTaskCalendarProps {
 interface TaskForCalendar {
   id: string;
   title: string;
+  description?: string;
   status: string;
   priority: string;
   due_date: string;
@@ -57,6 +59,7 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
         .select(`
           id,
           title,
+          description,
           status,
           priority,
           due_date,
@@ -137,6 +140,24 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
         return 'border-l-4 border-l-corporate-green';
       default:
         return 'border-l-4 border-l-gray-300';
+    }
+  };
+
+  const getPriorityLabel = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'Высокий';
+      case 'medium': return 'Средний';
+      case 'low': return 'Низкий';
+      default: return 'Неизвестно';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'completed': return 'Выполнено';
+      case 'in_progress': return 'В работе';
+      case 'pending': return 'Ожидает';
+      default: return status;
     }
   };
 
@@ -224,33 +245,111 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
                 
                 <div className="space-y-2">
                   {dayData.tasks.slice(0, 3).map((task) => (
-                    <div
-                      key={task.id}
-                      className={`text-sm p-2 rounded-md cursor-pointer hover:opacity-80 transition-all hover:shadow-sm ${getPriorityColor(task.priority)}`}
-                      title={`${task.title}${task.assignee ? ` - ${task.assignee.full_name}` : ''}`}
-                    >
-                      <div className="truncate font-semibold text-sm">
-                        {task.title}
-                      </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <Badge className={`text-xs px-2 py-1 ${getStatusColor(task.status)}`}>
-                          {task.status === 'completed' ? 'Выполнено' :
-                           task.status === 'in_progress' ? 'В работе' :
-                           task.status === 'pending' ? 'Ожидает' : task.status}
-                        </Badge>
-                        {task.assignee && !employeeId && (
-                          <span className="text-xs text-muted-foreground truncate ml-2 max-w-[80px]" title={task.assignee.full_name}>
-                            {task.assignee.full_name.split(' ')[0]}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    <HoverCard key={task.id}>
+                      <HoverCardTrigger asChild>
+                        <div
+                          className={`text-sm p-2 rounded-md cursor-pointer hover:opacity-80 transition-all hover:shadow-sm ${getPriorityColor(task.priority)}`}
+                        >
+                          <div className="truncate font-semibold text-sm">
+                            {task.title}
+                          </div>
+                          <div className="flex items-center justify-between mt-2">
+                            <Badge className={`text-xs px-2 py-1 ${getStatusColor(task.status)}`}>
+                              {getStatusLabel(task.status)}
+                            </Badge>
+                            {task.assignee && !employeeId && (
+                              <span className="text-xs text-muted-foreground truncate ml-2 max-w-[80px]" title={task.assignee.full_name}>
+                                {task.assignee.full_name.split(' ')[0]}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </HoverCardTrigger>
+                      <HoverCardContent className="w-80" side="top">
+                        <div className="space-y-3">
+                          <div>
+                            <h4 className="font-semibold text-base mb-1">{task.title}</h4>
+                            {task.description && (
+                              <p className="text-sm text-muted-foreground">{task.description}</p>
+                            )}
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="flex items-center gap-2">
+                              <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                              <div>
+                                <p className="text-xs text-muted-foreground">Приоритет</p>
+                                <Badge variant="outline" className={`text-xs ${
+                                  task.priority === 'high' ? 'border-corporate-blue text-corporate-blue' :
+                                  task.priority === 'medium' ? 'border-corporate-teal text-corporate-teal' :
+                                  'border-corporate-green text-corporate-green'
+                                }`}>
+                                  {getPriorityLabel(task.priority)}
+                                </Badge>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-4 h-4 text-muted-foreground" />
+                              <div>
+                                <p className="text-xs text-muted-foreground">Статус</p>
+                                <Badge className={`text-xs ${getStatusColor(task.status)}`}>
+                                  {getStatusLabel(task.status)}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {task.assignee && (
+                            <div className="flex items-center gap-2">
+                              <User className="w-4 h-4 text-muted-foreground" />
+                              <div>
+                                <p className="text-xs text-muted-foreground">Исполнитель</p>
+                                <p className="text-sm font-medium">{task.assignee.full_name}</p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-muted-foreground" />
+                            <div>
+                              <p className="text-xs text-muted-foreground">Дедлайн</p>
+                              <p className="text-sm font-medium">
+                                {format(new Date(task.due_date), 'd MMMM yyyy', { locale: ru })}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
                   ))}
                   
                   {dayData.tasks.length > 3 && (
-                    <div className="text-xs text-muted-foreground text-center py-1">
-                      +{dayData.tasks.length - 3} еще
-                    </div>
+                    <HoverCard>
+                      <HoverCardTrigger asChild>
+                        <div className="text-xs text-muted-foreground text-center py-1 cursor-pointer hover:text-primary">
+                          +{dayData.tasks.length - 3} еще
+                        </div>
+                      </HoverCardTrigger>
+                      <HoverCardContent className="w-80" side="top">
+                        <div className="space-y-2">
+                          <h4 className="font-semibold text-sm mb-2">Дополнительные задачи:</h4>
+                          {dayData.tasks.slice(3).map((task) => (
+                            <div key={task.id} className="flex items-center justify-between p-2 rounded border">
+                              <div className="flex-1">
+                                <p className="text-sm font-medium truncate">{task.title}</p>
+                                {task.assignee && (
+                                  <p className="text-xs text-muted-foreground">{task.assignee.full_name}</p>
+                                )}
+                              </div>
+                              <Badge className={`text-xs ml-2 ${getStatusColor(task.status)}`}>
+                                {getStatusLabel(task.status)}
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
                   )}
                   
                   {showAddButton && dayData.isCurrentMonth && (
