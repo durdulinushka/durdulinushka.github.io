@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus, Clock, User, AlertCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus, Clock, User, AlertCircle, List } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, isSameMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -38,6 +39,8 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     loadCalendarData();
@@ -163,6 +166,13 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
     }
   };
 
+  const handleDayClick = (dayData: CalendarDay) => {
+    if (dayData.tasks.length > 0) {
+      setSelectedDay(dayData);
+      setIsDialogOpen(true);
+    }
+  };
+
   if (loading) {
     return (
       <Card className="dashboard-card">
@@ -225,11 +235,12 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
             {calendarDays.map((dayData, index) => (
               <div 
                 key={index}
-                className={`min-h-[140px] p-3 border border-border transition-all hover:bg-muted/50 rounded-lg ${
+                className={`min-h-[140px] p-3 border border-border transition-all hover:bg-muted/50 rounded-lg cursor-pointer ${
                   dayData.isToday ? 'bg-gradient-to-br from-primary/10 to-primary/5 border-primary shadow-md' : ''
                 } ${
                   !dayData.isCurrentMonth ? 'opacity-50' : ''
                 }`}
+                onClick={() => handleDayClick(dayData)}
               >
                 <div className="flex items-center justify-between mb-3">
                   <span className={`text-lg font-bold ${
@@ -371,6 +382,77 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialog для просмотра всех задач дня */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <List className="w-5 h-5" />
+              Задачи на {selectedDay && format(selectedDay.date, "d MMMM yyyy", { locale: ru })}
+            </DialogTitle>
+            <DialogDescription>
+              Всего задач: {selectedDay?.tasks.length || 0}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 mt-4">
+            {selectedDay?.tasks.map((task, index) => (
+              <div 
+                key={task.id} 
+                className={`p-4 rounded-lg border transition-all hover:shadow-md ${getPriorityColor(task.priority)} bg-opacity-10`}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-base mb-1">{task.title}</h4>
+                    {task.description && (
+                      <p className="text-sm text-muted-foreground mb-2 leading-relaxed">
+                        {task.description}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2 ml-4">
+                    <Badge className={`text-xs ${getStatusColor(task.status)}`}>
+                      {getStatusLabel(task.status)}
+                    </Badge>
+                    <Badge variant="outline" className={`text-xs ${
+                      task.priority === "high" ? "border-corporate-blue text-corporate-blue" :
+                      task.priority === "medium" ? "border-corporate-teal text-corporate-teal" :
+                      "border-corporate-green text-corporate-green"
+                    }`}>
+                      {getPriorityLabel(task.priority)}
+                    </Badge>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between text-sm">
+                  {task.assignee && (
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">Исполнитель:</span>
+                      <span className="font-medium">{task.assignee.full_name}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Дедлайн:</span>
+                    <span className="font-medium">
+                      {format(new Date(task.due_date), "d MMMM yyyy", { locale: ru })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {(!selectedDay?.tasks || selectedDay.tasks.length === 0) && (
+              <div className="text-center py-8 text-muted-foreground">
+                <List className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>На этот день задач нет</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
