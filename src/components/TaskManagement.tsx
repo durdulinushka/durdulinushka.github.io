@@ -194,6 +194,29 @@ const TaskManagement = () => {
     }
   };
 
+  const duplicateDailyTasks = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('duplicate-daily-tasks', {
+        body: { source: 'manual' }
+      });
+
+      if (error) throw error;
+
+      toast({ 
+        title: "Успех", 
+        description: `Дублировано ${data.duplicated} ежедневных задач` 
+      });
+      fetchTasks();
+    } catch (error) {
+      console.error('Error duplicating daily tasks:', error);
+      toast({ 
+        title: "Ошибка", 
+        description: "Не удалось дублировать ежедневные задачи", 
+        variant: "destructive" 
+      });
+    }
+  };
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -295,6 +318,14 @@ const TaskManagement = () => {
               </CardDescription>
             </div>
             <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={duplicateDailyTasks}
+                title="Дублировать все выполненные ежедневные задачи с вчерашней даты на сегодня"
+              >
+                <Calendar className="w-4 h-4 mr-2" />
+                Дублировать ежедневные
+              </Button>
               {taskStats.completed > 0 && (
                 <Button 
                   variant="outline" 
