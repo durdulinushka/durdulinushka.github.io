@@ -530,6 +530,20 @@ const TaskManagement = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Диалог редактирования задачи */}
+      <EditTaskDialog
+        task={editingTask}
+        open={!!editingTask}
+        onOpenChange={(open) => {
+          if (!open) setEditingTask(null);
+        }}
+        onUpdate={() => {
+          fetchTasks();
+          setEditingTask(null);
+        }}
+        profiles={profiles}
+      />
     </div>
   );
 };
