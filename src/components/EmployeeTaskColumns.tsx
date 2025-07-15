@@ -310,12 +310,18 @@ const EmployeeTaskColumns = ({ employeeId }: EmployeeTaskColumnsProps) => {
                             
                             <div className="flex items-center justify-between">
                               <div className="flex gap-1">
-                                <Badge className={`text-xs ${getStatusColor(task.status)}`}>
-                                  {getStatusLabel(task.status)}
-                                </Badge>
-                                <Badge className={`text-xs ${getPriorityColor(task.priority)}`}>
-                                  {getPriorityLabel(task.priority)}
-                                </Badge>
+                                <div className="flex flex-col items-center">
+                                  <span className="text-xs text-muted-foreground/60 mb-1">Статус</span>
+                                  <Badge className={`text-xs ${getStatusColor(task.status)}`}>
+                                    {getStatusLabel(task.status)}
+                                  </Badge>
+                                </div>
+                                <div className="flex flex-col items-center">
+                                  <span className="text-xs text-muted-foreground/60 mb-1">Приоритет</span>
+                                  <Badge className={`text-xs ${getPriorityColor(task.priority)}`}>
+                                    {getPriorityLabel(task.priority)}
+                                  </Badge>
+                                </div>
                               </div>
                               
                               {task.due_date && (
