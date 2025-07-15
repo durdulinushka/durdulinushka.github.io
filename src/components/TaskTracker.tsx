@@ -19,6 +19,7 @@ interface Task {
 
 interface TaskTrackerProps {
   dailyHours: number;
+  employeeId: string;
 }
 
 interface TimeTrackingRecord {
@@ -33,7 +34,7 @@ interface TimeTrackingRecord {
   status: 'not-started' | 'working' | 'paused' | 'finished';
 }
 
-const TaskTracker = ({ dailyHours }: TaskTrackerProps) => {
+const TaskTracker = ({ dailyHours, employeeId }: TaskTrackerProps) => {
   const { toast } = useToast();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
@@ -52,28 +53,22 @@ const TaskTracker = ({ dailyHours }: TaskTrackerProps) => {
 
   // Загрузка задач и инициализация трекинга
   useEffect(() => {
-    loadTasks();
-    initializeTimeTracking();
-  }, []);
+    if (employeeId) {
+      loadTasks();
+      initializeTimeTracking();
+    }
+  }, [employeeId]);
 
   const loadTasks = async () => {
     try {
-      // Получаем первого сотрудника для демонстрации
-      const { data: profiles, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .limit(1);
+      if (!employeeId) return;
 
-      if (profileError || !profiles.length) return;
-
-      const employeeId = profiles[0].id;
-
-      // Загружаем задачи назначенные этому сотруднику
+      // Загружаем задачи назначенные текущему сотруднику
       const { data: tasksData, error: tasksError } = await supabase
         .from('tasks')
         .select('*')
         .eq('assignee_id', employeeId)
-        .eq('status', 'pending');
+        .in('status', ['pending', 'in-progress']);
 
       if (tasksError) throw tasksError;
       setTasks(tasksData || []);
@@ -85,21 +80,15 @@ const TaskTracker = ({ dailyHours }: TaskTrackerProps) => {
 
   const initializeTimeTracking = async () => {
     try {
-      const { data: profiles, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .limit(1);
+      if (!employeeId) return;
 
-      if (profileError || !profiles.length) return;
-
-      const currentEmployeeId = profiles[0].id;
       const today = new Date().toISOString().split('T')[0];
 
-      // Проверяем активную запись времени
+      // Проверяем активную запись времени для текущего сотрудника
       let { data: existingRecord, error: fetchError } = await supabase
         .from('time_tracking')
         .select('*')
-        .eq('employee_id', currentEmployeeId)
+        .eq('employee_id', employeeId)
         .eq('date', today)
         .in('status', ['working', 'paused'])
         .maybeSingle();
@@ -163,14 +152,8 @@ const TaskTracker = ({ dailyHours }: TaskTrackerProps) => {
 
   const acceptTask = async (task: Task) => {
     try {
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('*')
-        .limit(1);
+      if (!employeeId) return;
 
-      if (!profiles?.length) return;
-
-      const employeeId = profiles[0].id;
       const now = new Date();
       const nowISOString = now.toISOString();
       const today = now.toISOString().split('T')[0];
@@ -358,21 +341,14 @@ const TaskTracker = ({ dailyHours }: TaskTrackerProps) => {
   };
 
   const addComment = async (content: string) => {
-    if (!currentTask) return;
+    if (!currentTask || !employeeId) return;
 
     try {
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('*')
-        .limit(1);
-
-      if (!profiles?.length) return;
-
       const { error } = await supabase
         .from('task_comments')
         .insert([{
           task_id: currentTask.id,
-          author_id: profiles[0].id,
+          author_id: employeeId,
           content: content
         }]);
 
@@ -389,16 +365,9 @@ const TaskTracker = ({ dailyHours }: TaskTrackerProps) => {
   };
 
   const uploadDocument = async (file: File) => {
-    if (!currentTask) return;
+    if (!currentTask || !employeeId) return;
 
     try {
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('*')
-        .limit(1);
-
-      if (!profiles?.length) return;
-
       const fileName = `${Date.now()}-${file.name}`;
       const filePath = `${currentTask.id}/${fileName}`;
 
@@ -419,7 +388,7 @@ const TaskTracker = ({ dailyHours }: TaskTrackerProps) => {
         .from('task_documents')
         .insert([{
           task_id: currentTask.id,
-          uploader_id: profiles[0].id,
+          uploader_id: employeeId,
           file_name: file.name,
           file_url: urlData.publicUrl,
           file_size: file.size,
