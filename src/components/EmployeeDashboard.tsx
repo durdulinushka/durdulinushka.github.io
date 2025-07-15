@@ -142,10 +142,10 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Трекер задач и времени */}
           <TaskTracker dailyHours={employee.dailyHours} employeeId={employeeId} />
-          
-          {/* Календарь задач */}
-          <EmployeeTaskCalendar employeeId={employeeId} />
         </div>
+
+        {/* Календарь задач - на всю ширину */}
+        <EmployeeTaskCalendar employeeId={employeeId} />
       </div>
     </div>
   );

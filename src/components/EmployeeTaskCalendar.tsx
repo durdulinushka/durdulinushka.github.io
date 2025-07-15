@@ -155,21 +155,23 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <CalendarIcon className="w-5 h-5 text-primary" />
-        <h2 className="text-xl font-semibold">Календарь задач</h2>
+        <CalendarIcon className="w-6 h-6 text-primary" />
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+          Календарь задач
+        </h2>
       </div>
 
-      <Card className="dashboard-card">
-        <CardHeader>
+      <Card className="dashboard-card shadow-lg border-0 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+        <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button variant="outline" size="sm" onClick={goToPreviousMonth}>
+              <Button variant="outline" size="sm" onClick={goToPreviousMonth} className="hover:bg-primary/10">
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              <CardTitle className="text-lg">
+              <CardTitle className="text-xl font-bold">
                 {format(currentDate, 'LLLL yyyy', { locale: ru })}
               </CardTitle>
-              <Button variant="outline" size="sm" onClick={goToNextMonth}>
+              <Button variant="outline" size="sm" onClick={goToNextMonth} className="hover:bg-primary/10">
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
@@ -180,17 +182,18 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
                   Добавить задачу
                 </Button>
               )}
-              <Button variant="outline" size="sm" onClick={goToCurrentMonth}>
+              <Button variant="outline" size="sm" onClick={goToCurrentMonth} className="hover:bg-primary/10">
+                <CalendarIcon className="w-4 h-4 mr-2" />
                 Сегодня
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-7 gap-1">
+        <CardContent className="p-6">
+          <div className="grid grid-cols-7 gap-3">
             {/* Заголовки дней недели */}
             {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
-              <div key={day} className="p-3 text-center font-medium text-muted-foreground text-sm">
+              <div key={day} className="p-4 text-center font-semibold text-muted-foreground text-sm bg-muted/50 rounded-lg">
                 {day}
               </div>
             ))}
@@ -199,44 +202,44 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
             {calendarDays.map((dayData, index) => (
               <div 
                 key={index}
-                className={`min-h-[120px] p-2 border border-border transition-all hover:bg-muted/50 ${
-                  dayData.isToday ? 'bg-primary/5 border-primary' : ''
+                className={`min-h-[140px] p-3 border border-border transition-all hover:bg-muted/50 rounded-lg ${
+                  dayData.isToday ? 'bg-gradient-to-br from-primary/10 to-primary/5 border-primary shadow-md' : ''
                 } ${
                   !dayData.isCurrentMonth ? 'opacity-50' : ''
                 }`}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <span className={`text-sm font-medium ${
+                <div className="flex items-center justify-between mb-3">
+                  <span className={`text-lg font-bold ${
                     dayData.isToday ? 'text-primary font-bold' : 
                     dayData.isCurrentMonth ? 'text-foreground' : 'text-muted-foreground'
                   }`}>
                     {format(dayData.date, 'd')}
                   </span>
                   {dayData.isToday && (
-                    <Badge variant="default" className="text-xs px-1 py-0">
+                    <Badge variant="default" className="text-xs px-2 py-1 bg-primary/20 text-primary border-primary/30">
                       Сегодня
                     </Badge>
                   )}
                 </div>
                 
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {dayData.tasks.slice(0, 3).map((task) => (
                     <div
                       key={task.id}
-                      className={`text-xs p-1 rounded-sm cursor-pointer hover:opacity-80 transition-opacity ${getPriorityColor(task.priority)}`}
+                      className={`text-sm p-2 rounded-md cursor-pointer hover:opacity-80 transition-all hover:shadow-sm ${getPriorityColor(task.priority)}`}
                       title={`${task.title}${task.assignee ? ` - ${task.assignee.full_name}` : ''}`}
                     >
-                      <div className="truncate font-medium">
+                      <div className="truncate font-semibold text-sm">
                         {task.title}
                       </div>
-                      <div className="flex items-center justify-between mt-1">
-                        <Badge className={`text-xs ${getStatusColor(task.status)}`}>
+                      <div className="flex items-center justify-between mt-2">
+                        <Badge className={`text-xs px-2 py-1 ${getStatusColor(task.status)}`}>
                           {task.status === 'completed' ? 'Выполнено' :
                            task.status === 'in_progress' ? 'В работе' :
                            task.status === 'pending' ? 'Ожидает' : task.status}
                         </Badge>
                         {task.assignee && !employeeId && (
-                          <span className="text-xs text-muted-foreground truncate ml-1">
+                          <span className="text-xs text-muted-foreground truncate ml-2 max-w-[60px]">
                             {task.assignee.full_name.split(' ')[0]}
                           </span>
                         )}
