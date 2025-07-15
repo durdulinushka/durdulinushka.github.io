@@ -14,6 +14,7 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [impersonatedEmployeeId, setImpersonatedEmployeeId] = useState<string | null>(null);
   const [impersonatedEmployeeName, setImpersonatedEmployeeName] = useState<string>("");
+  const [viewMode, setViewMode] = useState<'admin' | 'employee'>('admin'); // Режим просмотра для администратора
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -121,6 +122,35 @@ const Index = () => {
   }
 
   if (userRole === 'admin') {
+    // Если администратор в режиме просмотра сотрудника
+    if (viewMode === 'employee') {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+          {/* Индикатор режима администратора */}
+          <div className="bg-corporate-blue text-white p-2 text-center">
+            <span className="text-sm">
+              Режим администратора - Просмотр своего кабинета сотрудника
+            </span>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="ml-4 text-white hover:bg-white/20"
+              onClick={() => setViewMode('admin')}
+            >
+              Вернуться к панели администратора
+            </Button>
+          </div>
+          <EmployeeDashboard 
+            onBack={async () => {
+              await supabase.auth.signOut();
+              navigate('/auth');
+            }} 
+          />
+        </div>
+      );
+    }
+    
+    // Обычная панель администратора
     return <AdminDashboard 
       onBack={async () => {
         await supabase.auth.signOut();
@@ -130,6 +160,7 @@ const Index = () => {
         setImpersonatedEmployeeId(employeeId);
         setImpersonatedEmployeeName(employeeName);
       }}
+      onSwitchToEmployeeView={() => setViewMode('employee')}
     />;
   }
 

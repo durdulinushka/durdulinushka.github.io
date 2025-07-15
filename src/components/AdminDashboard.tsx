@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 interface AdminDashboardProps {
   onBack: () => void;
   onImpersonate?: (employeeId: string, employeeName: string) => void;
+  onSwitchToEmployeeView?: () => void;
 }
 
 interface Stats {
@@ -24,7 +25,7 @@ interface Stats {
   completedToday: number;
 }
 
-const AdminDashboard = ({ onBack, onImpersonate }: AdminDashboardProps) => {
+const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: AdminDashboardProps) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'projects' | 'tasks' | 'reports'>('overview');
   const [stats, setStats] = useState<Stats>({
     totalEmployees: 0,
@@ -113,6 +114,12 @@ const AdminDashboard = ({ onBack, onImpersonate }: AdminDashboardProps) => {
             </p>
           </div>
           <div className="flex gap-2">
+            {onSwitchToEmployeeView && (
+              <Button variant="outline" onClick={onSwitchToEmployeeView}>
+                <User className="w-4 h-4 mr-2" />
+                Мой кабинет сотрудника
+              </Button>
+            )}
             {onImpersonate && (
               <Button variant="outline" onClick={() => setImpersonateDialogOpen(true)}>
                 <UserCheck className="w-4 h-4 mr-2" />
