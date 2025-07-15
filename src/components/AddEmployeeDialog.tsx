@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,9 +12,15 @@ interface AddEmployeeDialogProps {
   onEmployeeAdded?: () => void;
 }
 
+interface Department {
+  id: string;
+  name: string;
+}
+
 export const AddEmployeeDialog = ({ onEmployeeAdded }: AddEmployeeDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
@@ -26,15 +32,30 @@ export const AddEmployeeDialog = ({ onEmployeeAdded }: AddEmployeeDialogProps) =
     avatar_url: ''
   });
 
-  const departments = [
-    'HR',
-    'IT', 
-    'Finance',
-    'Marketing',
-    'Sales',
-    'Operations',
-    'Customer Service'
-  ];
+  useEffect(() => {
+    if (open) {
+      fetchDepartments();
+    }
+  }, [open]);
+
+  const fetchDepartments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('departments')
+        .select('id, name')
+        .order('name');
+
+      if (error) throw error;
+      setDepartments(data || []);
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+      toast({ 
+        title: "Ошибка", 
+        description: "Не удалось загрузить список отделов", 
+        variant: "destructive" 
+      });
+    }
+  };
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({
@@ -151,8 +172,8 @@ export const AddEmployeeDialog = ({ onEmployeeAdded }: AddEmployeeDialogProps) =
               </SelectTrigger>
               <SelectContent>
                 {departments.map((dept) => (
-                  <SelectItem key={dept} value={dept}>
-                    {dept}
+                  <SelectItem key={dept.id} value={dept.name}>
+                    {dept.name}
                   </SelectItem>
                 ))}
               </SelectContent>

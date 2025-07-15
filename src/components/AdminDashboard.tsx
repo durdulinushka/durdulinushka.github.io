@@ -7,9 +7,10 @@ import EmployeeList from "@/components/EmployeeList";
 import TaskManagement from "@/components/TaskManagement";
 import TaskCommentsAndDocs from "@/components/TaskCommentsAndDocs";
 import { ProjectManagement } from "./ProjectManagement";
+import { TaskArchive } from "./TaskArchive";
 import { AddEmployeeDialog } from "./AddEmployeeDialog";
 import { ImpersonateEmployeeDialog } from "./ImpersonateEmployeeDialog";
-import { TaskArchive } from "./TaskArchive";
+import DepartmentManagement from "./DepartmentManagement";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -27,7 +28,7 @@ interface Stats {
 }
 
 const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: AdminDashboardProps) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'projects' | 'tasks' | 'archive' | 'reports'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'projects' | 'tasks' | 'departments' | 'archive' | 'reports'>('overview');
   const [stats, setStats] = useState<Stats>({
     totalEmployees: 0,
     activeToday: 0,
@@ -158,6 +159,12 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
             onClick={() => setActiveTab('tasks')}
           >
             Задачи
+          </Button>
+          <Button 
+            variant={activeTab === 'departments' ? 'corporate' : 'ghost'}
+            onClick={() => setActiveTab('departments')}
+          >
+            Отделы
           </Button>
           <Button 
             variant={activeTab === 'archive' ? 'corporate' : 'ghost'}
@@ -297,6 +304,9 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
 
         {/* Управление задачами */}
         {activeTab === 'tasks' && <TaskManagement />}
+
+        {/* Управление отделами */}
+        {activeTab === 'departments' && <DepartmentManagement />}
 
         {/* Архив задач */}
         {activeTab === 'archive' && <TaskArchive />}
