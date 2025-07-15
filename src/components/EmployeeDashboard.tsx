@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUp, Clock, Pause, User, LogOut } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowUp, Clock, Pause, User, LogOut, BarChart3, Settings, Calendar } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import TaskTracker from "@/components/TaskTracker";
 import EmployeeTaskCalendar from "@/components/EmployeeTaskCalendar";
 import EmployeeTaskColumns from "@/components/EmployeeTaskColumns";
+import EmployeeHoursStats from "@/components/EmployeeHoursStats";
 import { EditProfileNameDialog } from "@/components/EditProfileNameDialog";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -139,17 +141,118 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
           </CardContent>
         </Card>
 
-        {/* Основная сетка */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Трекер задач и времени */}
-          <TaskTracker dailyHours={employee.dailyHours} employeeId={employeeId} />
-        </div>
+        {/* Навигация с вкладками */}
+        <Tabs defaultValue="dashboard" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Рабочий стол
+            </TabsTrigger>
+            <TabsTrigger value="profile" className="flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Профиль
+            </TabsTrigger>
+            <TabsTrigger value="stats" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Статистика
+            </TabsTrigger>
+            <TabsTrigger value="hours" className="flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              Часы
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Колонки задач */}
-        <EmployeeTaskColumns employeeId={employeeId} />
+          {/* Вкладка: Рабочий стол */}
+          <TabsContent value="dashboard" className="space-y-6">
+            {/* Основная сетка */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Трекер задач и времени */}
+              <TaskTracker dailyHours={employee.dailyHours} employeeId={employeeId} />
+            </div>
 
-        {/* Календарь задач - на всю ширину */}
-        <EmployeeTaskCalendar employeeId={employeeId} />
+            {/* Колонки задач */}
+            <EmployeeTaskColumns employeeId={employeeId} />
+
+            {/* Календарь задач - на всю ширину */}
+            <EmployeeTaskCalendar employeeId={employeeId} />
+          </TabsContent>
+
+          {/* Вкладка: Профиль */}
+          <TabsContent value="profile" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="w-5 h-5" />
+                  Настройки профиля
+                </CardTitle>
+                <CardDescription>
+                  Управление личными данными и настройками
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Полное имя</label>
+                    <p className="text-sm text-muted-foreground">{employee.name}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Должность</label>
+                    <p className="text-sm text-muted-foreground">{employee.position}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Отдел</label>
+                    <p className="text-sm text-muted-foreground">{employee.department}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Рабочих часов в день</label>
+                    <p className="text-sm text-muted-foreground">{employee.dailyHours}</p>
+                  </div>
+                </div>
+                <div className="pt-4">
+                  <EditProfileNameDialog onNameUpdated={handleNameUpdated} />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Вкладка: Статистика */}
+          <TabsContent value="stats" className="space-y-6">
+            <EmployeeHoursStats employeeId={employeeId} />
+          </TabsContent>
+
+          {/* Вкладка: Часы */}
+          <TabsContent value="hours" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  Рабочие часы
+                </CardTitle>
+                <CardDescription>
+                  Детальная информация о рабочем времени
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary">{employee.dailyHours}ч</div>
+                    <div className="text-sm text-muted-foreground">Норма в день</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary">{employee.dailyHours * 5}ч</div>
+                    <div className="text-sm text-muted-foreground">Норма в неделю</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary">{employee.dailyHours * 22}ч</div>
+                    <div className="text-sm text-muted-foreground">Норма в месяц</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <EmployeeHoursStats employeeId={employeeId} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
