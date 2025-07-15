@@ -9,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import EmployeeHoursStats from "@/components/EmployeeHoursStats";
 import EmployeeHoursCalendar from "@/components/EmployeeHoursCalendar";
-import EmployeeTaskCalendar from "@/components/EmployeeTaskCalendar";
 
 interface EmployeeProfile {
   id: string;
@@ -140,9 +139,6 @@ const EmployeeProfile = () => {
 
         {/* Hours Statistics */}
         <EmployeeHoursStats employeeId={employee.id} />
-
-        {/* Task Calendar */}
-        <EmployeeTaskCalendar employeeId={employee.id} />
 
         {/* Hours Calendar */}
         <EmployeeHoursCalendar employeeId={employee.id} />

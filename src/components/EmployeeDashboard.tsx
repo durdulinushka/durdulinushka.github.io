@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowUp, Clock, Pause, User, LogOut } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import TaskTracker from "@/components/TaskTracker";
-import { TaskCalendar } from "@/components/TaskCalendar";
+import EmployeeTaskCalendar from "@/components/EmployeeTaskCalendar";
 import { EditProfileNameDialog } from "@/components/EditProfileNameDialog";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -144,7 +144,7 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
           <TaskTracker dailyHours={employee.dailyHours} employeeId={employeeId} />
           
           {/* Календарь задач */}
-          <TaskCalendar employeeId={employeeId} />
+          <EmployeeTaskCalendar employeeId={employeeId} />
         </div>
       </div>
     </div>
