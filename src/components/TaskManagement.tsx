@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { EditTaskDialog } from "./EditTaskDialog";
 import { TaskArchive } from "./TaskArchive";
+import { DeleteTaskDialog } from "./DeleteTaskDialog";
 import { format, isToday, isYesterday, parseISO } from "date-fns";
 import { ru } from "date-fns/locale";
 
@@ -497,6 +498,11 @@ const TaskManagement = () => {
                     <Upload className="w-4 h-4 mr-1" />
                     Документы
                   </Button>
+                  <DeleteTaskDialog
+                    taskId={task.id}
+                    taskTitle={task.title}
+                    onTaskDeleted={fetchTasks}
+                  />
                 </div>
               </div>
             </CardContent>
