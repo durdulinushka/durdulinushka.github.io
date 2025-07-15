@@ -117,8 +117,8 @@ const TaskManagement = () => {
   };
 
   const createTask = async () => {
-    if (!newTask.title || !newTask.assignee_id) {
-      toast({ title: "Ошибка", description: "Заполните все обязательные поля", variant: "destructive" });
+    if (!newTask.title || !newTask.assignee_id || !newTask.due_date) {
+      toast({ title: "Ошибка", description: "Заполните все обязательные поля: название, исполнитель и дедлайн", variant: "destructive" });
       return;
     }
 
@@ -399,12 +399,17 @@ const TaskManagement = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <Input 
-                  type="date" 
-                  placeholder="Срок выполнения" 
-                  value={newTask.due_date}
-                  onChange={(e) => setNewTask({...newTask, due_date: e.target.value})}
-                />
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Дедлайн (обязательно) <span className="text-red-500">*</span>
+                  </label>
+                  <Input 
+                    type="date" 
+                    value={newTask.due_date}
+                    onChange={(e) => setNewTask({...newTask, due_date: e.target.value})}
+                    required
+                  />
+                </div>
                 <Input 
                   placeholder="Отдел" 
                   value={newTask.department}
