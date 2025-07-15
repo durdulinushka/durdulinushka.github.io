@@ -21,6 +21,7 @@ interface Employee {
 
 const EmployeeDashboard = ({ onBack }: EmployeeDashboardProps) => {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [employeeId, setEmployeeId] = useState<string>("");
   const [employee, setEmployee] = useState<Employee>({
     name: "Загрузка...",
     department: "Загрузка...",
@@ -39,11 +40,12 @@ const EmployeeDashboard = ({ onBack }: EmployeeDashboardProps) => {
       if (user) {
         const { data } = await supabase
           .from('profiles')
-          .select('full_name, department, position, daily_hours')
+          .select('id, full_name, department, position, daily_hours')
           .eq('user_id', user.id)
           .single();
         
         if (data) {
+          setEmployeeId(data.id);
           setEmployee({
             name: data.full_name,
             department: data.department,
@@ -116,7 +118,7 @@ const EmployeeDashboard = ({ onBack }: EmployeeDashboardProps) => {
           <TaskTracker dailyHours={employee.dailyHours} />
           
           {/* Календарь задач */}
-          <TaskCalendar employeeId="current-user" />
+          <TaskCalendar employeeId={employeeId} />
         </div>
       </div>
     </div>

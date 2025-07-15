@@ -46,10 +46,28 @@ export const TaskCalendar = ({ employeeId }: TaskCalendarProps) => {
 
   const fetchTasks = async () => {
     try {
+      let targetEmployeeId = employeeId;
+      if (!targetEmployeeId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('user_id', user.id)
+            .single();
+          targetEmployeeId = profile?.id;
+        }
+      }
+
+      if (!targetEmployeeId) {
+        setTasks([]);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
-        .eq('assignee_id', employeeId || 'current-user')
+        .eq('assignee_id', targetEmployeeId)
         .gte('planned_date', format(monthStart, 'yyyy-MM-dd'))
         .lte('planned_date', format(monthEnd, 'yyyy-MM-dd'));
 

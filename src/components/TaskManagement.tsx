@@ -127,7 +127,7 @@ const TaskManagement = () => {
         .from('tasks')
         .insert([{
           ...newTask,
-          creator_id: newTask.assignee_id, // В реальной системе это был бы ID текущего пользователя
+          creator_id: (await supabase.auth.getUser()).data.user?.id || null,
           department: selectedProfile?.department || newTask.department
         }]);
 

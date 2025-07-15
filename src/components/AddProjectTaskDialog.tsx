@@ -90,7 +90,7 @@ export const AddProjectTaskDialog = ({
           description: formData.description.trim() || null,
           priority: formData.priority,
           assignee_id: formData.assignee_id,
-          creator_id: 'current-user', // TODO: Replace with actual user ID
+          creator_id: (await supabase.auth.getUser()).data.user?.id || null,
           department: project.department,
           project_id: project.id,
           planned_date: formData.planned_date || null,
