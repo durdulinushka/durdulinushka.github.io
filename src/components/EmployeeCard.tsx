@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { User, Clock } from "lucide-react";
+import { Link } from "react-router-dom";
 import { DeleteEmployeeDialog } from "./DeleteEmployeeDialog";
 import { EmployeePlanDialog } from "./EmployeePlanDialog";
 import { EditEmployeeNameDialog } from "./EditEmployeeNameDialog";
@@ -30,11 +31,19 @@ export const EmployeeCard = ({ employee, onEmployeeDeleted, onPlanUpdated, onEmp
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-corporate-blue/10 rounded-full flex items-center justify-center">
-              <User className="w-6 h-6 text-corporate-blue" />
-            </div>
+            <Link 
+              to={`/employee/${employee.id}`}
+              className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center hover:bg-primary/20 transition-colors cursor-pointer"
+            >
+              <User className="w-6 h-6 text-primary" />
+            </Link>
             <div>
-              <h3 className="font-semibold">{employee.full_name}</h3>
+              <Link 
+                to={`/employee/${employee.id}`}
+                className="hover:text-primary transition-colors cursor-pointer"
+              >
+                <h3 className="font-semibold">{employee.full_name}</h3>
+              </Link>
               <p className="text-sm text-muted-foreground">
                 {employee.position} • {employee.department}
               </p>
@@ -60,7 +69,7 @@ export const EmployeeCard = ({ employee, onEmployeeDeleted, onPlanUpdated, onEmp
               </div>
               <div className="w-20 bg-muted rounded-full h-2 mt-1">
                 <div 
-                  className="bg-corporate-blue h-2 rounded-full transition-all"
+                  className="bg-primary h-2 rounded-full transition-all"
                   style={{ 
                     width: `0%` 
                   }}
