@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, TrendingUp, Calendar, Target, CheckCircle, ListTodo } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Clock, TrendingUp, Calendar, Target, CheckCircle, ListTodo, AlertTriangle, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface EmployeeHoursStatsProps {
@@ -15,6 +16,7 @@ interface HoursStats {
   dailyAverage: number;
   tasksWeek: number;
   tasksMonth: number;
+  dailyHours: number; // Норма часов в день
 }
 
 const EmployeeHoursStats = ({ employeeId }: EmployeeHoursStatsProps) => {
@@ -24,7 +26,8 @@ const EmployeeHoursStats = ({ employeeId }: EmployeeHoursStatsProps) => {
     thisMonth: 0,
     dailyAverage: 0,
     tasksWeek: 0,
-    tasksMonth: 0
+    tasksMonth: 0,
+    dailyHours: 8
   });
   const [loading, setLoading] = useState(true);
 
@@ -36,6 +39,15 @@ const EmployeeHoursStats = ({ employeeId }: EmployeeHoursStatsProps) => {
     try {
       const now = new Date();
       const today = now.toISOString().split('T')[0];
+      
+      // Получаем данные профиля для нормы часов
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('daily_hours')
+        .eq('id', employeeId)
+        .single();
+      
+      const dailyHours = profileData?.daily_hours || 8;
       
       // Начало недели (понедельник)
       const startOfWeek = new Date(now);
@@ -100,7 +112,8 @@ const EmployeeHoursStats = ({ employeeId }: EmployeeHoursStatsProps) => {
         thisMonth: monthHours,
         dailyAverage,
         tasksWeek: weekTasks?.length || 0,
-        tasksMonth: monthTasks?.length || 0
+        tasksMonth: monthTasks?.length || 0,
+        dailyHours
       });
     } catch (error) {
       console.error('Error loading hours stats:', error);
@@ -114,6 +127,42 @@ const EmployeeHoursStats = ({ employeeId }: EmployeeHoursStatsProps) => {
     const m = Math.round((hours - h) * 60);
     return `${h}ч ${m}м`;
   };
+
+  // Расчет плановых показателей
+  const getPlanData = () => {
+    const now = new Date();
+    const currentDay = now.getDay();
+    const currentDate = now.getDate();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    
+    // План на день
+    const dailyPlan = stats.dailyHours;
+    
+    // План на неделю (до текущего дня недели)
+    const weeklyWorkedDays = currentDay === 0 ? 5 : Math.min(currentDay, 5); // 5 рабочих дней максимум
+    const weeklyPlan = dailyPlan * weeklyWorkedDays;
+    
+    // План на месяц (до текущего дня месяца)
+    const monthlyWorkedDays = Math.min(currentDate, 22); // примерно 22 рабочих дня в месяце
+    const monthlyPlan = dailyPlan * monthlyWorkedDays;
+    
+    return {
+      dailyPlan,
+      weeklyPlan,
+      monthlyPlan,
+      weeklyWorkedDays,
+      monthlyWorkedDays
+    };
+  };
+
+  const getPerformanceStatus = (actual: number, plan: number) => {
+    const percentage = plan > 0 ? (actual / plan) * 100 : 0;
+    if (percentage >= 100) return { status: 'excellent', color: 'bg-green-500', text: 'Норма выполнена' };
+    if (percentage >= 80) return { status: 'good', color: 'bg-yellow-500', text: 'Близко к норме' };
+    return { status: 'needs-improvement', color: 'bg-red-500', text: 'Ниже нормы' };
+  };
+
+  const planData = getPlanData();
 
   if (loading) {
     return (
@@ -189,6 +238,147 @@ const EmployeeHoursStats = ({ employeeId }: EmployeeHoursStatsProps) => {
             <p className="text-xs text-muted-foreground mt-1">
               За этот месяц
             </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* План-факт выработки часов */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2">
+          <Target className="w-5 h-5 text-primary" />
+          <h2 className="text-xl font-semibold">План-факт выработки часов</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Сегодня */}
+          <Card className="dashboard-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center justify-between">
+                Сегодня
+                <Badge className={`${getPerformanceStatus(stats.today, planData.dailyPlan).color} text-white text-xs`}>
+                  {getPerformanceStatus(stats.today, planData.dailyPlan).text}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">План:</span>
+                <span className="font-medium">{formatHours(planData.dailyPlan)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Факт:</span>
+                <span className="font-medium">{formatHours(stats.today)}</span>
+              </div>
+              <Progress 
+                value={planData.dailyPlan > 0 ? (stats.today / planData.dailyPlan) * 100 : 0} 
+                className="h-2" 
+              />
+              <div className="text-xs text-muted-foreground text-center">
+                {planData.dailyPlan > 0 ? Math.round((stats.today / planData.dailyPlan) * 100) : 0}% выполнено
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* За неделю */}
+          <Card className="dashboard-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center justify-between">
+                За неделю
+                <Badge className={`${getPerformanceStatus(stats.thisWeek, planData.weeklyPlan).color} text-white text-xs`}>
+                  {getPerformanceStatus(stats.thisWeek, planData.weeklyPlan).text}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">План:</span>
+                <span className="font-medium">{formatHours(planData.weeklyPlan)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Факт:</span>
+                <span className="font-medium">{formatHours(stats.thisWeek)}</span>
+              </div>
+              <Progress 
+                value={planData.weeklyPlan > 0 ? (stats.thisWeek / planData.weeklyPlan) * 100 : 0} 
+                className="h-2" 
+              />
+              <div className="text-xs text-muted-foreground text-center">
+                {planData.weeklyPlan > 0 ? Math.round((stats.thisWeek / planData.weeklyPlan) * 100) : 0}% выполнено
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* За месяц */}
+          <Card className="dashboard-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center justify-between">
+                За месяц
+                <Badge className={`${getPerformanceStatus(stats.thisMonth, planData.monthlyPlan).color} text-white text-xs`}>
+                  {getPerformanceStatus(stats.thisMonth, planData.monthlyPlan).text}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">План:</span>
+                <span className="font-medium">{formatHours(planData.monthlyPlan)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Факт:</span>
+                <span className="font-medium">{formatHours(stats.thisMonth)}</span>
+              </div>
+              <Progress 
+                value={planData.monthlyPlan > 0 ? (stats.thisMonth / planData.monthlyPlan) * 100 : 0} 
+                className="h-2" 
+              />
+              <div className="text-xs text-muted-foreground text-center">
+                {planData.monthlyPlan > 0 ? Math.round((stats.thisMonth / planData.monthlyPlan) * 100) : 0}% выполнено
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Общий анализ выполнения нормы */}
+        <Card className="dashboard-card">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Анализ выполнения нормы
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span className="text-sm">Норма выполнена (100%+)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <span className="text-sm">Близко к норме (80-99%)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <span className="text-sm">Ниже нормы (&lt;80%)</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Норма в день:</span>
+                  <span className="ml-2 font-medium">{formatHours(stats.dailyHours)}</span>
+                </div>
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Среднее в день:</span>
+                  <span className="ml-2 font-medium">{formatHours(stats.dailyAverage)}</span>
+                </div>
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Отклонение:</span>
+                  <span className={`ml-2 font-medium ${stats.dailyAverage >= stats.dailyHours ? 'text-green-600' : 'text-red-600'}`}>
+                    {stats.dailyAverage >= stats.dailyHours ? '+' : ''}{formatHours(stats.dailyAverage - stats.dailyHours)}
+                  </span>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
