@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, User } from "lucide-react";
+import { Plus, Calendar, User, Link } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Project } from "./ProjectManagement";
 import { AddProjectTaskDialog } from "./AddProjectTaskDialog";
+import { AddExistingTasksDialog } from "./AddExistingTasksDialog";
 
 interface ProjectTask {
   id: string;
@@ -45,6 +46,7 @@ export const ProjectTasksDialog = ({
   const [tasks, setTasks] = useState<ProjectTask[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showExistingTasksDialog, setShowExistingTasksDialog] = useState(false);
   const { toast } = useToast();
 
   const fetchTasks = async () => {
@@ -139,14 +141,25 @@ export const ProjectTasksDialog = ({
             <div className="flex items-center justify-between">
               <DialogTitle>Задачи проекта: {project.name}</DialogTitle>
               {isAdmin && (
-                <Button
-                  onClick={() => setShowAddDialog(true)}
-                  size="sm"
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  Добавить задачу
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => setShowExistingTasksDialog(true)}
+                    size="sm"
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <Link className="w-4 h-4" />
+                    Добавить существующие
+                  </Button>
+                  <Button
+                    onClick={() => setShowAddDialog(true)}
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Создать новую
+                  </Button>
+                </div>
               )}
             </div>
           </DialogHeader>
@@ -163,14 +176,22 @@ export const ProjectTasksDialog = ({
                 <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>В проекте пока нет задач</p>
                 {isAdmin && (
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowAddDialog(true)}
-                    className="mt-4"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Создать первую задачу
-                  </Button>
+                  <div className="flex gap-2 justify-center mt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowExistingTasksDialog(true)}
+                    >
+                      <Link className="w-4 h-4 mr-2" />
+                      Добавить существующие
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowAddDialog(true)}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Создать новую задачу
+                    </Button>
+                  </div>
                 )}
               </div>
             ) : (
@@ -234,6 +255,13 @@ export const ProjectTasksDialog = ({
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
         onTaskAdded={handleTaskAdded}
+      />
+
+      <AddExistingTasksDialog
+        project={project}
+        open={showExistingTasksDialog}
+        onOpenChange={setShowExistingTasksDialog}
+        onTasksAdded={handleTaskAdded}
       />
     </>
   );
