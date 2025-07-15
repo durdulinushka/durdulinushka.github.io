@@ -510,25 +510,34 @@ const TaskManagement = () => {
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2 ml-4">
-                  <Badge 
-                    className={`${getPriorityColor(task.priority)} text-white border-transparent`}
-                  >
-                    {task.priority === 'high' ? 'Высокий' : 
-                     task.priority === 'medium' ? 'Средний' : 'Низкий'}
-                  </Badge>
-                  <Badge variant="outline">
-                    {getTypeLabel(task.task_type)}
-                  </Badge>
-                  <Badge 
-                    className={
-                      task.status === 'completed' ? 'bg-corporate-green text-white' :
-                      task.status === 'in-progress' ? 'bg-corporate-blue text-white' :
-                      'bg-corporate-orange text-white'
-                    }
-                  >
-                    {getStatusLabel(task.status)}
-                  </Badge>
+                <div className="flex items-center gap-4 ml-4">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-xs text-muted-foreground/60">Приоритет</span>
+                    <Badge 
+                      className={`${getPriorityColor(task.priority)} text-white border-transparent`}
+                    >
+                      {task.priority === 'high' ? 'Высокий' : 
+                       task.priority === 'medium' ? 'Средний' : 'Низкий'}
+                    </Badge>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-xs text-muted-foreground/60">Тип</span>
+                    <Badge variant="outline">
+                      {getTypeLabel(task.task_type)}
+                    </Badge>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-xs text-muted-foreground/60">Статус</span>
+                    <Badge 
+                      className={
+                        task.status === 'completed' ? 'bg-corporate-green text-white' :
+                        task.status === 'in-progress' ? 'bg-corporate-blue text-white' :
+                        'bg-corporate-orange text-white'
+                      }
+                    >
+                      {getStatusLabel(task.status)}
+                    </Badge>
+                  </div>
                 </div>
               </div>
               
