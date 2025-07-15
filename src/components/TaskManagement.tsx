@@ -171,6 +171,27 @@ const TaskManagement = () => {
     }
   };
 
+  const archiveCompletedTasks = async () => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ 
+          archived: true,
+          archived_at: new Date().toISOString()
+        })
+        .eq('status', 'completed')
+        .eq('archived', false);
+
+      if (error) throw error;
+
+      toast({ title: "Успех", description: "Все выполненные задачи перемещены в архив" });
+      fetchTasks();
+    } catch (error) {
+      console.error('Error archiving completed tasks:', error);
+      toast({ title: "Ошибка", description: "Не удалось архивировать задачи", variant: "destructive" });
+    }
+  };
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -267,13 +288,24 @@ const TaskManagement = () => {
                 Создание и распределение задач для сотрудников
               </CardDescription>
             </div>
-            <Button 
-              variant="corporate" 
-              onClick={() => setShowCreateForm(!showCreateForm)}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Создать задачу
-            </Button>
+            <div className="flex gap-2">
+              {taskStats.completed > 0 && (
+                <Button 
+                  variant="outline" 
+                  onClick={archiveCompletedTasks}
+                >
+                  <Archive className="w-4 h-4 mr-2" />
+                  Архивировать выполненные ({taskStats.completed})
+                </Button>
+              )}
+              <Button 
+                variant="corporate" 
+                onClick={() => setShowCreateForm(!showCreateForm)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Создать задачу
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

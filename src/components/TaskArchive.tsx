@@ -50,8 +50,8 @@ export const TaskArchive = ({ currentUserId = "" }: TaskArchiveProps) => {
           *,
           assignee:profiles!tasks_assignee_id_fkey(full_name)
         `)
-        .eq('status', 'completed')
-        .order('completed_at', { ascending: false });
+        .eq('archived', true)
+        .order('archived_at', { ascending: false });
 
       if (error) throw error;
 
@@ -142,6 +142,35 @@ export const TaskArchive = ({ currentUserId = "" }: TaskArchiveProps) => {
     }
   };
 
+  const archiveAllCompletedTasks = async () => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ 
+          archived: true,
+          archived_at: new Date().toISOString()
+        })
+        .eq('status', 'completed')
+        .eq('archived', false);
+
+      if (error) throw error;
+
+      toast({ 
+        title: "Успешно", 
+        description: "Все выполненные задачи перенесены в архив" 
+      });
+      
+      fetchArchivedTasks();
+    } catch (error) {
+      console.error('Error archiving completed tasks:', error);
+      toast({ 
+        title: "Ошибка", 
+        description: "Не удалось архивировать задачи", 
+        variant: "destructive" 
+      });
+    }
+  };
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -223,13 +252,24 @@ export const TaskArchive = ({ currentUserId = "" }: TaskArchiveProps) => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Archive className="w-5 h-5" />
-            Архив выполненных задач
-          </CardTitle>
-          <CardDescription>
-            Просмотр и управление выполненными задачами
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Archive className="w-5 h-5" />
+                Архив задач
+              </CardTitle>
+              <CardDescription>
+                Просмотр и управление архивированными задачами
+              </CardDescription>
+            </div>
+            <Button 
+              variant="corporate" 
+              onClick={archiveAllCompletedTasks}
+            >
+              <Archive className="w-4 h-4 mr-2" />
+              Архивировать выполненные
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 mb-6">

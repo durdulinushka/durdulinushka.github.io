@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, User, Plus, UserCheck } from "lucide-react";
+import { Users, Calendar, User, Plus, UserCheck, Archive } from "lucide-react";
 import EmployeeList from "@/components/EmployeeList";
 import TaskManagement from "@/components/TaskManagement";
 import TaskCommentsAndDocs from "@/components/TaskCommentsAndDocs";
 import { ProjectManagement } from "./ProjectManagement";
 import { AddEmployeeDialog } from "./AddEmployeeDialog";
 import { ImpersonateEmployeeDialog } from "./ImpersonateEmployeeDialog";
+import { TaskArchive } from "./TaskArchive";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,7 +27,7 @@ interface Stats {
 }
 
 const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: AdminDashboardProps) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'projects' | 'tasks' | 'reports'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'projects' | 'tasks' | 'archive' | 'reports'>('overview');
   const [stats, setStats] = useState<Stats>({
     totalEmployees: 0,
     activeToday: 0,
@@ -159,6 +160,13 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
             Задачи
           </Button>
           <Button 
+            variant={activeTab === 'archive' ? 'corporate' : 'ghost'}
+            onClick={() => setActiveTab('archive')}
+          >
+            <Archive className="w-4 h-4 mr-2" />
+            Архив
+          </Button>
+          <Button 
             variant={activeTab === 'reports' ? 'corporate' : 'ghost'}
             onClick={() => setActiveTab('reports')}
           >
@@ -289,6 +297,9 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
 
         {/* Управление задачами */}
         {activeTab === 'tasks' && <TaskManagement />}
+
+        {/* Архив задач */}
+        {activeTab === 'archive' && <TaskArchive />}
 
         {/* Отчеты по задачам */}
         {activeTab === 'reports' && <TaskCommentsAndDocs />}
