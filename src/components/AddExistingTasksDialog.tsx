@@ -25,7 +25,7 @@ interface ExistingTask {
   profiles: {
     full_name: string;
     avatar_url?: string;
-  };
+  } | null;
 }
 
 interface AddExistingTasksDialogProps {
@@ -88,7 +88,7 @@ export const AddExistingTasksDialog = ({
 
   const filteredTasks = tasks.filter(task => 
     task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    task.profiles.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (task.profiles?.full_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     task.department.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -271,7 +271,7 @@ export const AddExistingTasksDialog = ({
                       <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <User className="w-4 h-4" />
-                          <span>{task.profiles.full_name}</span>
+                          <span>{task.profiles?.full_name || 'Не назначен'}</span>
                         </div>
                         <span>Отдел: {task.department}</span>
                         {task.planned_date && (
