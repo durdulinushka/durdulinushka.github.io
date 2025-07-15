@@ -47,7 +47,7 @@ const TaskAcceptance = ({ tasks, onAcceptTask }: TaskAcceptanceProps) => {
   const completedTasks = tasks.filter(task => task.status === 'completed');
 
   return (
-    <div className="space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Доступные задачи */}
       <Card>
         <CardHeader>
@@ -103,16 +103,18 @@ const TaskAcceptance = ({ tasks, onAcceptTask }: TaskAcceptanceProps) => {
       </Card>
 
       {/* Завершенные задачи */}
-      {completedTasks.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Завершенные задачи</CardTitle>
-            <CardDescription>
-              Недавно выполненные задачи с потраченным временем
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {completedTasks.map((task) => (
+      <Card>
+        <CardHeader>
+          <CardTitle>Завершенные задачи</CardTitle>
+          <CardDescription>
+            Недавно выполненные задачи с потраченным временем
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {completedTasks.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Нет завершенных задач</p>
+          ) : (
+            completedTasks.map((task) => (
               <div key={task.id} className="border rounded-lg p-4 space-y-3 opacity-75">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1">
@@ -149,10 +151,10 @@ const TaskAcceptance = ({ tasks, onAcceptTask }: TaskAcceptanceProps) => {
                   </div>
                 </div>
               </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+            ))
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
