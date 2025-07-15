@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
+import type { DateRange } from "react-day-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, CalendarDays } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,14 +25,11 @@ const EmployeeHoursCalendar = ({ employeeId }: EmployeeHoursCalendarProps) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [hoursData, setHoursData] = useState<DayHours[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState<{from: Date | undefined, to: Date | undefined}>({
-    from: undefined,
-    to: undefined
-  });
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [isCustomRange, setIsCustomRange] = useState(false);
 
   useEffect(() => {
-    if (isCustomRange && dateRange.from && dateRange.to) {
+    if (isCustomRange && dateRange?.from && dateRange?.to) {
       loadCustomRangeData();
     } else {
       loadMonthData();
@@ -83,7 +81,7 @@ const EmployeeHoursCalendar = ({ employeeId }: EmployeeHoursCalendarProps) => {
   };
 
   const loadCustomRangeData = async () => {
-    if (!dateRange.from || !dateRange.to) return;
+    if (!dateRange?.from || !dateRange?.to) return;
     
     try {
       setLoading(true);
@@ -177,12 +175,13 @@ const EmployeeHoursCalendar = ({ employeeId }: EmployeeHoursCalendarProps) => {
   const goToCurrentMonth = () => {
     setCurrentDate(new Date());
     setIsCustomRange(false);
-    setDateRange({ from: undefined, to: undefined });
+    setDateRange(undefined);
   };
 
-  const handleDateRangeSelect = (range: {from: Date | undefined, to: Date | undefined} | undefined) => {
+  const handleDateRangeSelect = (range: DateRange | undefined) => {
+    console.log('Date range selected:', range); // Добавляем лог для отладки
+    setDateRange(range);
     if (range?.from && range?.to) {
-      setDateRange(range);
       setIsCustomRange(true);
     }
   };
@@ -214,10 +213,11 @@ const EmployeeHoursCalendar = ({ employeeId }: EmployeeHoursCalendarProps) => {
                   </Button>
                 </>
               )}
-              {isCustomRange && (
+              {isCustomRange && dateRange?.from && (
                 <CardTitle className="text-lg">
-                  {dateRange.from && dateRange.to && 
-                    `${format(dateRange.from, 'dd.MM.yyyy')} - ${format(dateRange.to, 'dd.MM.yyyy')}`
+                  {dateRange.to 
+                    ? `${format(dateRange.from, 'dd.MM.yyyy')} - ${format(dateRange.to, 'dd.MM.yyyy')}`
+                    : `От ${format(dateRange.from, 'dd.MM.yyyy')} - выберите конец периода`
                   }
                 </CardTitle>
               )}
