@@ -44,6 +44,7 @@ const TaskManagement = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterDepartment, setFilterDepartment] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showCommentsDialog, setShowCommentsDialog] = useState(false);
@@ -238,9 +239,13 @@ const TaskManagement = () => {
                          task.department.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesFilter = filterStatus === "all" || task.status === filterStatus;
+    const matchesDepartment = filterDepartment === "all" || task.department === filterDepartment;
     
-    return matchesSearch && matchesFilter;
+    return matchesSearch && matchesFilter && matchesDepartment;
   });
+
+  // Получаем уникальные отделы из задач
+  const uniqueDepartments = Array.from(new Set(tasks.map(task => task.department)));
 
   const taskStats = {
     total: tasks.length,
@@ -326,6 +331,19 @@ const TaskManagement = () => {
                 <SelectItem value="pending">Ожидают</SelectItem>
                 <SelectItem value="in-progress">В работе</SelectItem>
                 <SelectItem value="completed">Выполнено</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterDepartment} onValueChange={setFilterDepartment}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Фильтр по отделу" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все отделы</SelectItem>
+                {uniqueDepartments.map((department) => (
+                  <SelectItem key={department} value={department}>
+                    {department}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
