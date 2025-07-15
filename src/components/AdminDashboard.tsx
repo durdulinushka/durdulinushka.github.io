@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, User, Plus, UserCheck, Archive } from "lucide-react";
+import { Users, Calendar, User, Plus, UserCheck, Archive, FileText } from "lucide-react";
 import EmployeeList from "@/components/EmployeeList";
 import TaskManagement from "@/components/TaskManagement";
 import TaskCommentsAndDocs from "@/components/TaskCommentsAndDocs";
@@ -11,6 +11,7 @@ import { TaskArchive } from "./TaskArchive";
 import { AddEmployeeDialog } from "./AddEmployeeDialog";
 import { ImpersonateEmployeeDialog } from "./ImpersonateEmployeeDialog";
 import DepartmentManagement from "./DepartmentManagement";
+import MaterialsManagement from "./MaterialsManagement";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -28,7 +29,7 @@ interface Stats {
 }
 
 const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: AdminDashboardProps) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'projects' | 'tasks' | 'departments' | 'archive' | 'reports'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'projects' | 'tasks' | 'departments' | 'materials' | 'archive' | 'reports'>('overview');
   const [stats, setStats] = useState<Stats>({
     totalEmployees: 0,
     activeToday: 0,
@@ -165,6 +166,13 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
             onClick={() => setActiveTab('departments')}
           >
             Отделы
+          </Button>
+          <Button 
+            variant={activeTab === 'materials' ? 'corporate' : 'ghost'}
+            onClick={() => setActiveTab('materials')}
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            Материалы
           </Button>
           <Button 
             variant={activeTab === 'archive' ? 'corporate' : 'ghost'}
@@ -307,6 +315,9 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
 
         {/* Управление отделами */}
         {activeTab === 'departments' && <DepartmentManagement />}
+
+        {/* Управление материалами */}
+        {activeTab === 'materials' && <MaterialsManagement />}
 
         {/* Архив задач */}
         {activeTab === 'archive' && <TaskArchive />}

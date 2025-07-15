@@ -49,6 +49,54 @@ export type Database = {
           },
         ]
       }
+      materials: {
+        Row: {
+          access_type: string
+          allowed_users: Json | null
+          created_at: string
+          department: string | null
+          description: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          title: string
+          updated_at: string
+          uploader_id: string
+        }
+        Insert: {
+          access_type?: string
+          allowed_users?: Json | null
+          created_at?: string
+          department?: string | null
+          description?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+          uploader_id: string
+        }
+        Update: {
+          access_type?: string
+          allowed_users?: Json | null
+          created_at?: string
+          department?: string | null
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+          uploader_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
