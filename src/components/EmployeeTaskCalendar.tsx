@@ -239,7 +239,7 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
                            task.status === 'pending' ? 'Ожидает' : task.status}
                         </Badge>
                         {task.assignee && !employeeId && (
-                          <span className="text-xs text-muted-foreground truncate ml-2 max-w-[60px]">
+                          <span className="text-xs text-muted-foreground truncate ml-2 max-w-[80px]" title={task.assignee.full_name}>
                             {task.assignee.full_name.split(' ')[0]}
                           </span>
                         )}

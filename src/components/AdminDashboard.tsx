@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, User, Plus, UserCheck, Archive, FileText, LogOut } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Users, Calendar, User, Plus, UserCheck, Archive, FileText, LogOut, Filter } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import EmployeeList from "@/components/EmployeeList";
 import TaskManagement from "@/components/TaskManagement";
@@ -13,6 +14,7 @@ import { AddEmployeeDialog } from "./AddEmployeeDialog";
 import { ImpersonateEmployeeDialog } from "./ImpersonateEmployeeDialog";
 import DepartmentManagement from "./DepartmentManagement";
 import MaterialsManagement from "./MaterialsManagement";
+import EmployeeTaskCalendar from "./EmployeeTaskCalendar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -39,16 +41,18 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
   });
   const [loading, setLoading] = useState(true);
   const [impersonateDialogOpen, setImpersonateDialogOpen] = useState(false);
+  const [selectedEmployeeForCalendar, setSelectedEmployeeForCalendar] = useState<string>('all');
+  const [employees, setEmployees] = useState<Array<{id: string, full_name: string}>>([]);
   const { toast } = useToast();
 
   const fetchStats = async () => {
     try {
       setLoading(true);
       
-      // Получаем общее количество сотрудников
-      const { data: employees, error: employeesError } = await supabase
+      // Получаем общее количество сотрудников и их данные
+      const { data: employeesData, error: employeesError } = await supabase
         .from('profiles')
-        .select('id');
+        .select('id, full_name');
 
       if (employeesError) throw employeesError;
 
@@ -84,11 +88,14 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
       const uniqueActiveEmployees = [...new Set(activeEmployees?.map(emp => emp.employee_id) || [])];
 
       setStats({
-        totalEmployees: employees?.length || 0,
+        totalEmployees: employeesData?.length || 0,
         activeToday: uniqueActiveEmployees.length,
         pendingTasks: pendingTasks?.length || 0,
         completedToday: completedTasks?.length || 0
       });
+
+      // Сохраняем список сотрудников для фильтра
+      setEmployees(employeesData || []);
 
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -304,6 +311,39 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
                 </div>
               </CardContent>
             </Card>
+
+            {/* Календарь задач */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-primary" />
+                  <h3 className="text-lg font-semibold">Календарь задач</h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-muted-foreground" />
+                  <Select 
+                    value={selectedEmployeeForCalendar} 
+                    onValueChange={setSelectedEmployeeForCalendar}
+                  >
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="Выберите сотрудника" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Все сотрудники</SelectItem>
+                      {employees.map((employee) => (
+                        <SelectItem key={employee.id} value={employee.id}>
+                          {employee.full_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <EmployeeTaskCalendar 
+                employeeId={selectedEmployeeForCalendar === 'all' ? undefined : selectedEmployeeForCalendar}
+              />
+            </div>
           </div>
         )}
 
