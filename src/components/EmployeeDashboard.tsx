@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUp, Clock, Pause, User } from "lucide-react";
+import { ArrowUp, Clock, Pause, User, LogOut } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import TaskTracker from "@/components/TaskTracker";
 import { TaskCalendar } from "@/components/TaskCalendar";
 import { EditProfileNameDialog } from "@/components/EditProfileNameDialog";
@@ -100,18 +101,22 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
               })}
             </p>
           </div>
-          <Button variant="outline" onClick={onBack}>
-            Назад
-          </Button>
+          <div className="flex gap-2">
+            <ThemeToggle />
+            <Button variant="outline" onClick={onBack}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Выйти
+            </Button>
+          </div>
         </div>
 
         {/* Профиль сотрудника */}
-        <Card>
+        <Card className="dashboard-card">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-corporate-blue/10 rounded-full flex items-center justify-center">
-                  <User className="w-6 h-6 text-corporate-blue" />
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                  <User className="w-6 h-6 text-primary" />
                 </div>
                 <div>
                   <CardTitle className="text-xl">{employee.name}</CardTitle>

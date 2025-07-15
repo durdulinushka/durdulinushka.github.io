@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, User, Plus, UserCheck, Archive, FileText } from "lucide-react";
+import { Users, Calendar, User, Plus, UserCheck, Archive, FileText, LogOut } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import EmployeeList from "@/components/EmployeeList";
 import TaskManagement from "@/components/TaskManagement";
 import TaskCommentsAndDocs from "@/components/TaskCommentsAndDocs";
@@ -117,6 +118,7 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
             </p>
           </div>
           <div className="flex gap-2">
+            <ThemeToggle />
             {onSwitchToEmployeeView && (
               <Button variant="outline" onClick={onSwitchToEmployeeView}>
                 <User className="w-4 h-4 mr-2" />
@@ -130,7 +132,8 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
               </Button>
             )}
             <Button variant="outline" onClick={onBack}>
-              Назад
+              <LogOut className="w-4 h-4 mr-2" />
+              Выйти
             </Button>
           </div>
         </div>
@@ -193,54 +196,54 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
         {activeTab === 'overview' && (
           <div className="space-y-6">
             {/* Статистика */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="dashboard-card">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     Всего сотрудников
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-corporate-blue">
+                  <div className="text-2xl font-bold text-primary">
                     {loading ? "..." : stats.totalEmployees}
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="dashboard-card">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     Активны сегодня
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-corporate-green">
+                  <div className="text-2xl font-bold text-primary">
                     {loading ? "..." : stats.activeToday}
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="dashboard-card">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     Ожидающие задачи
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-corporate-orange">
+                  <div className="text-2xl font-bold text-primary">
                     {loading ? "..." : stats.pendingTasks}
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="dashboard-card">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     Выполнено сегодня
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-corporate-green">
+                  <div className="text-2xl font-bold text-primary">
                     {loading ? "..." : stats.completedToday}
                   </div>
                 </CardContent>

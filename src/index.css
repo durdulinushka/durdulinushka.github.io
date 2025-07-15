@@ -74,41 +74,57 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 210 19% 8%;
+    --foreground: 210 20% 95%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 210 15% 12%;
+    --card-foreground: 210 20% 95%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 210 15% 12%;
+    --popover-foreground: 210 20% 95%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 142 76% 36%;
+    --primary-foreground: 210 20% 98%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 210 12% 16%;
+    --secondary-foreground: 210 20% 95%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 210 12% 16%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 210 12% 16%;
+    --accent-foreground: 210 20% 95%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 210 20% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 210 12% 16%;
+    --input: 210 12% 16%;
+    --ring: 142 76% 36%;
+    
+    /* Корпоративные цвета для темной темы */
+    --corporate-blue: 213 94% 68%;
+    --corporate-blue-dark: 213 94% 58%;
+    --corporate-green: 142 76% 36%;
+    --corporate-orange: 25 95% 53%;
+    --corporate-red: 0 84% 60%;
+    
+    /* Градиенты для темной темы */
+    --gradient-primary: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 46%));
+    --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 46%));
+    
+    /* Тени для темной темы */
+    --shadow-corporate: 0 4px 20px -2px hsl(142 76% 36% / 0.15);
+    --shadow-card: 0 2px 10px -1px hsl(0 0% 0% / 0.2);
+
+    --sidebar-background: 210 15% 12%;
+    --sidebar-foreground: 210 20% 95%;
+    --sidebar-primary: 142 76% 36%;
+    --sidebar-primary-foreground: 210 20% 98%;
+    --sidebar-accent: 210 12% 16%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 210 12% 16%;
+    --sidebar-ring: 142 76% 36%;
   }
 }
 
@@ -119,5 +135,37 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Стилизация карточек в темной теме */
+  .dark .card-dark {
+    @apply bg-card border-border/50 shadow-lg;
+  }
+
+  /* Кастомные стили для дашборда */
+  .dashboard-card {
+    @apply bg-card border-border/50 rounded-lg p-6 shadow-sm hover:shadow-md transition-all duration-200;
+  }
+
+  .dark .dashboard-card {
+    @apply bg-card/90 border-border/30 shadow-lg backdrop-blur-sm;
+  }
+
+  /* Градиенты для темной темы */
+  .dark .dashboard-gradient {
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);
+  }
+
+  /* Стили для навигации */
+  .nav-button {
+    @apply px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200;
+  }
+
+  .nav-button.active {
+    @apply bg-primary text-primary-foreground;
+  }
+
+  .nav-button:not(.active) {
+    @apply text-muted-foreground hover:text-foreground hover:bg-muted/50;
   }
 }
