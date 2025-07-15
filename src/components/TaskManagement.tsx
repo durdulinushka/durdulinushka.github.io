@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Plus, User, Bell, Upload, MessageSquare, Edit, Archive, Eye, EyeOff } from "lucide-react";
+import { Calendar, Plus, User, Bell, Upload, MessageSquare, Edit, Archive, Eye, EyeOff, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { EditTaskDialog } from "./EditTaskDialog";
@@ -30,6 +30,8 @@ interface Task {
   created_at: string;
   viewed_by: string[];
   archived: boolean;
+  completed_at?: string | null;
+  total_hours?: number | null;
 }
 
 interface Profile {
@@ -72,7 +74,8 @@ const TaskManagement = () => {
         .from('tasks')
         .select(`
           *,
-          assignee:profiles!tasks_assignee_id_fkey(full_name)
+          assignee:profiles!tasks_assignee_id_fkey(full_name),
+          time_tracking(total_hours)
         `)
         .eq('archived', false)
         .order('created_at', { ascending: false });
@@ -92,7 +95,11 @@ const TaskManagement = () => {
         department: task.department,
         created_at: task.created_at,
         viewed_by: Array.isArray(task.viewed_by) ? task.viewed_by.map(id => String(id)) : [],
-        archived: task.archived || false
+        archived: task.archived || false,
+        completed_at: task.completed_at,
+        total_hours: task.status === 'completed' && task.time_tracking?.[0]?.total_hours 
+          ? task.time_tracking[0].total_hours 
+          : null
       })) || [];
 
       setTasks(formattedTasks);
@@ -254,6 +261,17 @@ const TaskManagement = () => {
       default:
         return status;
     }
+  };
+
+  const formatTime = (hours: number) => {
+    const totalMinutes = Math.floor(hours * 60);
+    const displayHours = Math.floor(totalMinutes / 60);
+    const remainingMinutes = totalMinutes % 60;
+    
+    if (displayHours > 0) {
+      return `${displayHours}ч ${remainingMinutes}м`;
+    }
+    return `${remainingMinutes}м`;
   };
 
   const filteredTasks = tasks.filter(task => {
@@ -481,6 +499,12 @@ const TaskManagement = () => {
                           {task.due_date ? new Date(task.due_date).toLocaleDateString('ru-RU') : 'Не установлен'}
                         </div>
                         <span>{task.department}</span>
+                        {task.status === 'completed' && task.total_hours && (
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            Потрачено: {formatTime(task.total_hours)}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
