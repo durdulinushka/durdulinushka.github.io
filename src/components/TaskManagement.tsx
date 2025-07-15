@@ -89,7 +89,7 @@ const TaskManagement = () => {
         status: task.status as 'pending' | 'in-progress' | 'completed',
         department: task.department,
         created_at: task.created_at,
-        viewed_by: Array.isArray(task.viewed_by) ? task.viewed_by : [],
+        viewed_by: Array.isArray(task.viewed_by) ? task.viewed_by.map(id => String(id)) : [],
         archived: task.archived || false
       })) || [];
 
