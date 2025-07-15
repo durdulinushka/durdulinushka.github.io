@@ -122,6 +122,7 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
       case 'completed':
         return 'bg-corporate-green text-white';
       case 'in_progress':
+      case 'in-progress':
         return 'bg-corporate-blue text-white';
       case 'pending':
         return 'bg-corporate-sage text-white';
@@ -155,7 +156,8 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'completed': return 'Выполнено';
-      case 'in_progress': return 'В работе';
+      case 'in_progress':
+      case 'in-progress': return 'В работе';
       case 'pending': return 'Ожидает';
       default: return status;
     }
