@@ -68,7 +68,7 @@ const MaterialsManagement = () => {
         .from('materials')
         .select(`
           *,
-          uploader:profiles(full_name)
+          uploader:profiles!materials_uploader_id_fkey(full_name)
         `)
         .order('created_at', { ascending: false });
 
@@ -87,7 +87,7 @@ const MaterialsManagement = () => {
         department: material.department,
         allowed_users: Array.isArray(material.allowed_users) ? material.allowed_users.map(id => String(id)) : [],
         created_at: material.created_at,
-        uploader_name: Array.isArray(material.uploader) && material.uploader[0]?.full_name || 'Неизвестен'
+        uploader_name: material.uploader?.full_name || 'Неизвестен'
       })) || [];
 
       setMaterials(formattedMaterials);
