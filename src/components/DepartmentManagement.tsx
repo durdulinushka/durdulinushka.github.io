@@ -310,12 +310,12 @@ const DepartmentManagement = () => {
               value={newDepartment.description}
               onChange={(e) => setNewDepartment({...newDepartment, description: e.target.value})}
             />
-            <Select value={newDepartment.head_id} onValueChange={(value) => setNewDepartment({...newDepartment, head_id: value})}>
+            <Select value={newDepartment.head_id || 'none'} onValueChange={(value) => setNewDepartment({...newDepartment, head_id: value === 'none' ? '' : value})}>
               <SelectTrigger>
                 <SelectValue placeholder="Выберите руководителя (необязательно)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Не назначен</SelectItem>
+                <SelectItem value="none">Не назначен</SelectItem>
                 {profiles.map((profile) => (
                   <SelectItem key={profile.id} value={profile.id}>
                     {profile.full_name} - {profile.position}
@@ -354,14 +354,14 @@ const DepartmentManagement = () => {
                 onChange={(e) => setEditingDepartment({...editingDepartment, description: e.target.value})}
               />
               <Select 
-                value={editingDepartment.head_id || ''} 
-                onValueChange={(value) => setEditingDepartment({...editingDepartment, head_id: value || null})}
+                value={editingDepartment.head_id || 'none'} 
+                onValueChange={(value) => setEditingDepartment({...editingDepartment, head_id: value === 'none' ? null : value})}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Выберите руководителя (необязательно)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Не назначен</SelectItem>
+                  <SelectItem value="none">Не назначен</SelectItem>
                   {profiles.map((profile) => (
                     <SelectItem key={profile.id} value={profile.id}>
                       {profile.full_name} - {profile.position}
