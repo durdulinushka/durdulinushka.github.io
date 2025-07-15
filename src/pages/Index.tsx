@@ -12,6 +12,8 @@ const Index = () => {
   const [userRole, setUserRole] = useState<'employee' | 'admin' | null>(null);
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [impersonatedEmployeeId, setImpersonatedEmployeeId] = useState<string | null>(null);
+  const [impersonatedEmployeeName, setImpersonatedEmployeeName] = useState<string>("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -79,6 +81,38 @@ const Index = () => {
     );
   }
 
+  // Если администратор вошёл как сотрудник, показываем панель сотрудника
+  if (userRole === 'admin' && impersonatedEmployeeId) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+        {/* Индикатор режима администратора */}
+        <div className="bg-corporate-orange text-white p-2 text-center">
+          <span className="text-sm">
+            Режим администратора - Вы просматриваете систему как: {impersonatedEmployeeName}
+          </span>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="ml-4 text-white hover:bg-white/20"
+            onClick={() => {
+              setImpersonatedEmployeeId(null);
+              setImpersonatedEmployeeName("");
+            }}
+          >
+            Вернуться к панели администратора
+          </Button>
+        </div>
+        <EmployeeDashboard 
+          employeeId={impersonatedEmployeeId}
+          onBack={async () => {
+            await supabase.auth.signOut();
+            navigate('/auth');
+          }} 
+        />
+      </div>
+    );
+  }
+
   if (userRole === 'employee') {
     return <EmployeeDashboard onBack={async () => {
       await supabase.auth.signOut();
@@ -87,10 +121,16 @@ const Index = () => {
   }
 
   if (userRole === 'admin') {
-    return <AdminDashboard onBack={async () => {
-      await supabase.auth.signOut();
-      navigate('/auth');
-    }} />;
+    return <AdminDashboard 
+      onBack={async () => {
+        await supabase.auth.signOut();
+        navigate('/auth');
+      }}
+      onImpersonate={(employeeId, employeeName) => {
+        setImpersonatedEmployeeId(employeeId);
+        setImpersonatedEmployeeName(employeeName);
+      }}
+    />;
   }
 
   // Этот код не должен выполняться, но на всякий случай

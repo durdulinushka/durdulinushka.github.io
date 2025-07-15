@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface EmployeeDashboardProps {
   onBack: () => void;
+  employeeId?: string; // Optional employee ID for admin impersonation
 }
 
 interface Employee {
@@ -19,7 +20,7 @@ interface Employee {
   dailyHours: number;
 }
 
-const EmployeeDashboard = ({ onBack }: EmployeeDashboardProps) => {
+const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: EmployeeDashboardProps) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [employeeId, setEmployeeId] = useState<string>("");
   const [employee, setEmployee] = useState<Employee>({
@@ -36,12 +37,12 @@ const EmployeeDashboard = ({ onBack }: EmployeeDashboardProps) => {
 
   useEffect(() => {
     const getCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
+      // If impersonatedEmployeeId is provided, use it instead of current user
+      if (impersonatedEmployeeId) {
         const { data } = await supabase
           .from('profiles')
           .select('id, full_name, department, position, daily_hours')
-          .eq('user_id', user.id)
+          .eq('id', impersonatedEmployeeId)
           .single();
         
         if (data) {
@@ -53,11 +54,31 @@ const EmployeeDashboard = ({ onBack }: EmployeeDashboardProps) => {
             dailyHours: data.daily_hours || 8
           });
         }
+      } else {
+        // Normal employee view - get current user's data
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data } = await supabase
+            .from('profiles')
+            .select('id, full_name, department, position, daily_hours')
+            .eq('user_id', user.id)
+            .single();
+          
+          if (data) {
+            setEmployeeId(data.id);
+            setEmployee({
+              name: data.full_name,
+              department: data.department,
+              position: data.position,
+              dailyHours: data.daily_hours || 8
+            });
+          }
+        }
       }
     };
 
     getCurrentUser();
-  }, []);
+  }, [impersonatedEmployeeId]);
 
   const handleNameUpdated = (newName: string) => {
     setEmployee(prev => ({ ...prev, name: newName }));

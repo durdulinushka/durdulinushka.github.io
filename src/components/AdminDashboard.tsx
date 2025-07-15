@@ -2,17 +2,19 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, User, Plus } from "lucide-react";
+import { Users, Calendar, User, Plus, UserCheck } from "lucide-react";
 import EmployeeList from "@/components/EmployeeList";
 import TaskManagement from "@/components/TaskManagement";
 import TaskCommentsAndDocs from "@/components/TaskCommentsAndDocs";
 import { ProjectManagement } from "./ProjectManagement";
 import { AddEmployeeDialog } from "./AddEmployeeDialog";
+import { ImpersonateEmployeeDialog } from "./ImpersonateEmployeeDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface AdminDashboardProps {
   onBack: () => void;
+  onImpersonate?: (employeeId: string, employeeName: string) => void;
 }
 
 interface Stats {
@@ -22,7 +24,7 @@ interface Stats {
   completedToday: number;
 }
 
-const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
+const AdminDashboard = ({ onBack, onImpersonate }: AdminDashboardProps) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'projects' | 'tasks' | 'reports'>('overview');
   const [stats, setStats] = useState<Stats>({
     totalEmployees: 0,
@@ -31,6 +33,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
     completedToday: 0
   });
   const [loading, setLoading] = useState(true);
+  const [impersonateDialogOpen, setImpersonateDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const fetchStats = async () => {
@@ -109,9 +112,17 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               Управление сотрудниками и задачами
             </p>
           </div>
-          <Button variant="outline" onClick={onBack}>
-            Назад
-          </Button>
+          <div className="flex gap-2">
+            {onImpersonate && (
+              <Button variant="outline" onClick={() => setImpersonateDialogOpen(true)}>
+                <UserCheck className="w-4 h-4 mr-2" />
+                Войти как сотрудник
+              </Button>
+            )}
+            <Button variant="outline" onClick={onBack}>
+              Назад
+            </Button>
+          </div>
         </div>
 
         {/* Навигация */}
@@ -275,6 +286,17 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
         {/* Отчеты по задачам */}
         {activeTab === 'reports' && <TaskCommentsAndDocs />}
       </div>
+
+      {/* Диалог входа как сотрудник */}
+      <ImpersonateEmployeeDialog
+        open={impersonateDialogOpen}
+        onOpenChange={setImpersonateDialogOpen}
+        onImpersonate={(employeeId, employeeName) => {
+          if (onImpersonate) {
+            onImpersonate(employeeId, employeeName);
+          }
+        }}
+      />
     </div>
   );
 };
