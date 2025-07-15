@@ -15,6 +15,8 @@ interface Task {
   status: string;
   assignee_id: string;
   department: string;
+  completed_at?: string | null;
+  total_hours?: number | null;
 }
 
 interface TaskTrackerProps {
@@ -63,15 +65,42 @@ const TaskTracker = ({ dailyHours, employeeId }: TaskTrackerProps) => {
     try {
       if (!employeeId) return;
 
-      // Загружаем задачи назначенные текущему сотруднику
-      const { data: tasksData, error: tasksError } = await supabase
+      // Загружаем активные задачи назначенные текущему сотруднику
+      const { data: activeTasks, error: activeError } = await supabase
         .from('tasks')
         .select('*')
         .eq('assignee_id', employeeId)
         .in('status', ['pending', 'in-progress']);
 
-      if (tasksError) throw tasksError;
-      setTasks(tasksData || []);
+      if (activeError) throw activeError;
+
+      // Загружаем недавно завершенные задачи с данными о времени
+      const today = new Date();
+      const threeDaysAgo = new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000);
+
+      const { data: completedTasks, error: completedError } = await supabase
+        .from('tasks')
+        .select(`
+          *,
+          time_tracking!inner(total_hours)
+        `)
+        .eq('assignee_id', employeeId)
+        .eq('status', 'completed')
+        .gte('completed_at', threeDaysAgo.toISOString())
+        .order('completed_at', { ascending: false })
+        .limit(10);
+
+      if (completedError) throw completedError;
+
+      // Объединяем данные о потраченном времени с завершенными задачами
+      const completedWithTime = (completedTasks || []).map(task => ({
+        ...task,
+        total_hours: task.time_tracking?.[0]?.total_hours || 0
+      }));
+
+      // Объединяем активные и завершенные задачи
+      const allTasks = [...(activeTasks || []), ...completedWithTime];
+      setTasks(allTasks);
     } catch (error) {
       console.error('Error loading tasks:', error);
       toast({ title: "Ошибка", description: "Не удалось загрузить задачи", variant: "destructive" });
