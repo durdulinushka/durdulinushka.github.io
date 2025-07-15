@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, TrendingUp, Calendar, Target } from "lucide-react";
+import { Clock, TrendingUp, Calendar, Target, CheckCircle, ListTodo } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface EmployeeHoursStatsProps {
@@ -13,6 +13,8 @@ interface HoursStats {
   thisWeek: number;
   thisMonth: number;
   dailyAverage: number;
+  tasksWeek: number;
+  tasksMonth: number;
 }
 
 const EmployeeHoursStats = ({ employeeId }: EmployeeHoursStatsProps) => {
@@ -20,7 +22,9 @@ const EmployeeHoursStats = ({ employeeId }: EmployeeHoursStatsProps) => {
     today: 0,
     thisWeek: 0,
     thisMonth: 0,
-    dailyAverage: 0
+    dailyAverage: 0,
+    tasksWeek: 0,
+    tasksMonth: 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -74,11 +78,29 @@ const EmployeeHoursStats = ({ employeeId }: EmployeeHoursStatsProps) => {
       const workingDaysThisMonth = monthData?.length || 1;
       const dailyAverage = monthHours / workingDaysThisMonth;
 
+      // Задачи за неделю
+      const { data: weekTasks } = await supabase
+        .from('tasks')
+        .select('id')
+        .eq('assignee_id', employeeId)
+        .eq('status', 'completed')
+        .gte('completed_at', startOfWeek.toISOString());
+
+      // Задачи за месяц  
+      const { data: monthTasks } = await supabase
+        .from('tasks')
+        .select('id')
+        .eq('assignee_id', employeeId)
+        .eq('status', 'completed')
+        .gte('completed_at', startOfMonth.toISOString());
+
       setStats({
         today: todayHours,
         thisWeek: weekHours,
         thisMonth: monthHours,
-        dailyAverage
+        dailyAverage,
+        tasksWeek: weekTasks?.length || 0,
+        tasksMonth: monthTasks?.length || 0
       });
     } catch (error) {
       console.error('Error loading hours stats:', error);
@@ -117,7 +139,7 @@ const EmployeeHoursStats = ({ employeeId }: EmployeeHoursStatsProps) => {
         <h2 className="text-xl font-semibold">Статистика рабочего времени</h2>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card className="dashboard-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Сегодня</CardTitle>
@@ -169,6 +191,42 @@ const EmployeeHoursStats = ({ employeeId }: EmployeeHoursStatsProps) => {
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Task Statistics */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2">
+          <ListTodo className="w-5 h-5 text-primary" />
+          <h2 className="text-xl font-semibold">Выполненные задачи</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="dashboard-card">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">За неделю</CardTitle>
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">{stats.tasksWeek}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Задач завершено
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="dashboard-card">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">За месяц</CardTitle>
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">{stats.tasksMonth}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Задач завершено
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
