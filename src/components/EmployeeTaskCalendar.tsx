@@ -27,7 +27,8 @@ interface TaskForCalendar {
   description?: string;
   status: string;
   priority: string;
-  due_date: string;
+  start_date: string | null;
+  due_date: string | null;
   assignee?: {
     full_name: string;
     id: string;
@@ -71,15 +72,15 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
           description,
           status,
           priority,
+          start_date,
           due_date,
           assignee:profiles!tasks_assignee_id_fkey(
             id,
             full_name
           )
         `)
-        .gte('due_date', format(calendarStart, 'yyyy-MM-dd'))
-        .lte('due_date', format(calendarEnd, 'yyyy-MM-dd'))
-        .not('due_date', 'is', null);
+        .or(`start_date.lte.${format(calendarEnd, 'yyyy-MM-dd')},due_date.lte.${format(calendarEnd, 'yyyy-MM-dd')}`)
+        .or(`start_date.gte.${format(calendarStart, 'yyyy-MM-dd')},due_date.gte.${format(calendarStart, 'yyyy-MM-dd')}`);
 
       // Если передан employeeId, фильтруем только по этому сотруднику
       if (employeeId) {
@@ -94,9 +95,22 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
       const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
       
       const calendarData = days.map(day => {
-        const dayTasks = (tasks || []).filter(task => 
-          task.due_date && isSameDay(new Date(task.due_date), day)
-        );
+        const dayTasks = (tasks || []).filter(task => {
+          const dayStr = format(day, 'yyyy-MM-dd');
+          // Проверяем попадание в диапазон start_date - due_date
+          if (task.start_date && task.due_date) {
+            return dayStr >= task.start_date && dayStr <= task.due_date;
+          }
+          // Для задач только с due_date
+          if (task.due_date && !task.start_date) {
+            return task.due_date === dayStr;
+          }
+          // Для задач только с start_date
+          if (task.start_date && !task.due_date) {
+            return task.start_date === dayStr;
+          }
+          return false;
+        });
 
         return {
           date: day,
@@ -329,15 +343,22 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
                             </div>
                           )}
                           
-                          <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-muted-foreground" />
-                            <div>
-                              <p className="text-xs text-muted-foreground">Дедлайн</p>
-                              <p className="text-sm font-medium">
-                                {format(new Date(task.due_date), 'd MMMM yyyy', { locale: ru })}
-                              </p>
-                            </div>
-                          </div>
+                           <div className="flex items-center gap-2">
+                             <Clock className="w-4 h-4 text-muted-foreground" />
+                             <div>
+                               <p className="text-xs text-muted-foreground">Период</p>
+                               <p className="text-sm font-medium">
+                                 {task.start_date && task.due_date 
+                                   ? `${format(new Date(task.start_date), 'd MMM', { locale: ru })} - ${format(new Date(task.due_date), 'd MMM yyyy', { locale: ru })}` 
+                                   : task.due_date 
+                                     ? format(new Date(task.due_date), 'd MMMM yyyy', { locale: ru })
+                                     : task.start_date 
+                                       ? format(new Date(task.start_date), 'd MMMM yyyy', { locale: ru })
+                                       : 'Бессрочная'
+                                 }
+                               </p>
+                             </div>
+                           </div>
                         </div>
                       </HoverCardContent>
                     </HoverCard>
@@ -439,13 +460,20 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
                       <span className="font-medium">{task.assignee.full_name}</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Дедлайн:</span>
-                    <span className="font-medium">
-                      {format(new Date(task.due_date), "d MMMM yyyy", { locale: ru })}
-                    </span>
-                  </div>
+                   <div className="flex items-center gap-2">
+                     <Clock className="w-4 h-4 text-muted-foreground" />
+                     <span className="text-muted-foreground">Период:</span>
+                     <span className="font-medium">
+                       {task.start_date && task.due_date 
+                         ? `${format(new Date(task.start_date), 'd MMM', { locale: ru })} - ${format(new Date(task.due_date), 'd MMM yyyy', { locale: ru })}` 
+                         : task.due_date 
+                           ? format(new Date(task.due_date), 'd MMMM yyyy', { locale: ru })
+                           : task.start_date 
+                             ? format(new Date(task.start_date), 'd MMMM yyyy', { locale: ru })
+                             : 'Бессрочная'
+                       }
+                     </span>
+                   </div>
                 </div>
               </div>
             ))}
