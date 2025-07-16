@@ -256,50 +256,80 @@ export default function MessengerDashboard() {
       return;
     }
 
-    const { data: chat, error: chatError } = await supabase
-      .from("chats")
-      .insert({
+    try {
+      console.log("Creating chat with data:", {
         name: newChatName,
         type: newChatType,
         description: newChatDescription,
-        created_by: user.id
-      })
-      .select()
-      .single();
-
-    if (chatError) {
-      toast({ title: "Ошибка", description: "Не удалось создать чат", variant: "destructive" });
-      return;
-    }
-
-    // Add creator as admin
-    await supabase
-      .from("chat_members")
-      .insert({
-        chat_id: chat.id,
-        user_id: user.id,
-        role: "admin"
+        created_by: user?.id,
+        selectedMembers
       });
 
-    // Add selected members
-    const memberInserts = selectedMembers.map(memberId => ({
-      chat_id: chat.id,
-      user_id: memberId,
-      role: "member"
-    }));
+      const { data: chat, error: chatError } = await supabase
+        .from("chats")
+        .insert({
+          name: newChatName,
+          type: newChatType,
+          description: newChatDescription,
+          created_by: user?.id
+        })
+        .select()
+        .single();
 
-    await supabase
-      .from("chat_members")
-      .insert(memberInserts);
+      if (chatError) {
+        console.error("Chat creation error:", chatError);
+        toast({ title: "Ошибка", description: `Не удалось создать чат: ${chatError.message}`, variant: "destructive" });
+        return;
+      }
 
-    setIsCreatingChat(false);
-    setNewChatName("");
-    setNewChatType("group");
-    setNewChatDescription("");
-    setSelectedMembers([]);
-    fetchChats();
+      console.log("Chat created successfully:", chat);
 
-    toast({ title: "Успех", description: "Чат создан" });
+      // Add creator as admin
+      const { error: creatorError } = await supabase
+        .from("chat_members")
+        .insert({
+          chat_id: chat.id,
+          user_id: user?.id,
+          role: "admin"
+        });
+
+      if (creatorError) {
+        console.error("Creator member error:", creatorError);
+        toast({ title: "Ошибка", description: `Не удалось добавить создателя: ${creatorError.message}`, variant: "destructive" });
+        return;
+      }
+
+      // Add selected members
+      if (selectedMembers.length > 0) {
+        const memberInserts = selectedMembers.map(memberId => ({
+          chat_id: chat.id,
+          user_id: memberId,
+          role: "member"
+        }));
+
+        const { error: membersError } = await supabase
+          .from("chat_members")
+          .insert(memberInserts);
+
+        if (membersError) {
+          console.error("Members error:", membersError);
+          toast({ title: "Ошибка", description: `Не удалось добавить участников: ${membersError.message}`, variant: "destructive" });
+          return;
+        }
+      }
+
+      setIsCreatingChat(false);
+      setNewChatName("");
+      setNewChatType("group");
+      setNewChatDescription("");
+      setSelectedMembers([]);
+      fetchChats();
+
+      toast({ title: "Успех", description: "Чат создан" });
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      toast({ title: "Ошибка", description: "Произошла неожиданная ошибка", variant: "destructive" });
+    }
   };
 
   const sendMessage = async () => {
