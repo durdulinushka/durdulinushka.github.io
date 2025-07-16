@@ -32,30 +32,25 @@ Deno.serve(async (req) => {
 
     console.log('Starting daily tasks duplication...');
 
-    // Получаем все завершенные ежедневные задачи с вчерашней датой
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-    const { data: completedDailyTasks, error: fetchError } = await supabaseClient
+    // Получаем все ежедневные задачи (бессрочные)
+    const { data: dailyTasks, error: fetchError } = await supabaseClient
       .from('tasks')
       .select('*')
       .eq('task_type', 'daily')
-      .eq('status', 'completed')
-      .eq('due_date', yesterdayStr);
+      .is('due_date', null); // Бессрочные задачи
 
     if (fetchError) {
-      console.error('Error fetching completed daily tasks:', fetchError);
+      console.error('Error fetching daily tasks:', fetchError);
       throw fetchError;
     }
 
-    console.log(`Found ${completedDailyTasks?.length || 0} completed daily tasks from yesterday`);
+    console.log(`Found ${dailyTasks?.length || 0} daily tasks for duplication`);
 
-    if (!completedDailyTasks || completedDailyTasks.length === 0) {
+    if (!dailyTasks || dailyTasks.length === 0) {
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: 'No completed daily tasks found for duplication',
+          message: 'No daily tasks found for duplication',
           duplicated: 0
         }),
         { 
@@ -65,19 +60,50 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Создаем новые задачи на сегодня
+    // Проверяем, есть ли уже задачи на сегодня для каждого сотрудника
     const today = new Date().toISOString().split('T')[0];
-    const tasksToCreate = completedDailyTasks.map((task: Task) => ({
-      title: task.title,
-      description: task.description,
-      assignee_id: task.assignee_id,
-      priority: task.priority,
-      task_type: task.task_type,
-      due_date: today,
-      department: task.department,
-      creator_id: task.creator_id,
-      status: 'pending'
-    }));
+    const tasksToCreate = [];
+
+    for (const task of dailyTasks) {
+      // Проверяем, есть ли уже такая задача на сегодня
+      const { data: existingTask } = await supabaseClient
+        .from('tasks')
+        .select('id')
+        .eq('title', task.title)
+        .eq('assignee_id', task.assignee_id)
+        .eq('task_type', 'daily')
+        .eq('start_date', today)
+        .single();
+
+      if (!existingTask) {
+        tasksToCreate.push({
+          title: task.title,
+          description: task.description,
+          assignee_id: task.assignee_id,
+          priority: task.priority,
+          task_type: task.task_type,
+          start_date: today,
+          due_date: null, // Бессрочная
+          department: task.department,
+          creator_id: task.creator_id,
+          status: 'pending'
+        });
+      }
+    }
+
+    if (tasksToCreate.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'All daily tasks already exist for today',
+          duplicated: 0
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
     const { data: createdTasks, error: createError } = await supabaseClient
       .from('tasks')
