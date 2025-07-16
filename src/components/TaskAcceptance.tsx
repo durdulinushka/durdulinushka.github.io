@@ -47,9 +47,9 @@ const TaskAcceptance = ({ tasks, onAcceptTask }: TaskAcceptanceProps) => {
   const completedTasks = tasks.filter(task => task.status === 'completed');
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
       {/* Доступные задачи */}
-      <Card>
+      <Card className="xl:col-span-1">
         <CardHeader>
           <CardTitle>Доступные задачи</CardTitle>
           <CardDescription>
@@ -61,15 +61,15 @@ const TaskAcceptance = ({ tasks, onAcceptTask }: TaskAcceptanceProps) => {
             <p className="text-sm text-muted-foreground">Нет доступных задач</p>
           ) : (
             availableTasks.map((task) => (
-            <div key={task.id} className="border rounded-lg p-4 space-y-3">
-              <div className="flex items-start justify-between gap-2">
+            <div key={task.id} className="border rounded-lg p-6 space-y-3">
+              <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
-                  <h4 className="font-medium">{task.title}</h4>
+                  <h4 className="font-medium text-lg">{task.title}</h4>
                   {task.description && (
-                    <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
+                    <p className="text-sm text-muted-foreground mt-2">{task.description}</p>
                   )}
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-2">
                   <Badge 
                     className={`text-xs ${getPriorityColor(task.priority)} text-white`}
                   >
@@ -82,15 +82,15 @@ const TaskAcceptance = ({ tasks, onAcceptTask }: TaskAcceptanceProps) => {
                   </Badge>
                 </div>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between pt-2">
                 {task.due_date && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-sm text-muted-foreground">
                     Срок: {new Date(task.due_date).toLocaleDateString('ru-RU')}
                   </span>
                 )}
                 <Button 
                   variant="corporate"
-                  size="sm"
+                  size="default"
                   onClick={() => onAcceptTask(task)}
                 >
                   Принять задачу
@@ -103,7 +103,7 @@ const TaskAcceptance = ({ tasks, onAcceptTask }: TaskAcceptanceProps) => {
       </Card>
 
       {/* Завершенные задачи */}
-      <Card>
+      <Card className="xl:col-span-1">
         <CardHeader>
           <CardTitle>Завершенные задачи</CardTitle>
           <CardDescription>
@@ -115,15 +115,15 @@ const TaskAcceptance = ({ tasks, onAcceptTask }: TaskAcceptanceProps) => {
             <p className="text-sm text-muted-foreground">Нет завершенных задач</p>
           ) : (
             completedTasks.map((task) => (
-              <div key={task.id} className="border rounded-lg p-4 space-y-3 opacity-75">
-                <div className="flex items-start justify-between gap-2">
+              <div key={task.id} className="border rounded-lg p-6 space-y-3 opacity-75">
+                <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
-                    <h4 className="font-medium line-through text-muted-foreground">{task.title}</h4>
+                    <h4 className="font-medium text-lg line-through text-muted-foreground">{task.title}</h4>
                     {task.description && (
-                      <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
+                      <p className="text-sm text-muted-foreground mt-2">{task.description}</p>
                     )}
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-2">
                     <Badge className="bg-corporate-green text-white text-xs">
                       Выполнено
                     </Badge>
@@ -135,16 +135,16 @@ const TaskAcceptance = ({ tasks, onAcceptTask }: TaskAcceptanceProps) => {
                     </Badge>
                   </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <div className="flex items-center justify-between pt-2">
+                  <div className="flex items-center gap-6 text-sm text-muted-foreground">
                     {task.completed_at && (
                       <span>
                         Завершено: {new Date(task.completed_at).toLocaleDateString('ru-RU')}
                       </span>
                     )}
                     {task.total_hours && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
+                      <span className="flex items-center gap-2">
+                        <Clock className="w-4 h-4" />
                         Потрачено: {formatTime(task.total_hours)}
                       </span>
                     )}
