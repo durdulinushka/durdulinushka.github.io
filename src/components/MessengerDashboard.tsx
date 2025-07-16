@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { MessageSquare, Plus, Users, Send, Paperclip, Search } from "lucide-react";
+import { MessageSquare, Plus, Users, Send, Paperclip, Search, Trash2, Archive, MoreVertical } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
 
@@ -151,11 +152,12 @@ export default function MessengerDashboard() {
 
       const chatIds = userMemberships.map(m => m.chat_id);
 
-      // Теперь получаем сами чаты
+      // Теперь получаем сами чаты (исключая архивированные)
       const { data: chatsData, error: chatsError } = await supabase
         .from("chats")
         .select("*")
         .in("id", chatIds)
+        .eq("archived", false) // Исключаем архивированные чаты
         .order("updated_at", { ascending: false });
 
       if (chatsError) {
@@ -393,6 +395,96 @@ export default function MessengerDashboard() {
     setNewMessage("");
   };
 
+  const deleteChat = async (chatId: string) => {
+    if (!chatId) return;
+
+    try {
+      // Сначала удаляем все сообщения чата
+      const { error: messagesError } = await supabase
+        .from("messages")
+        .delete()
+        .eq("chat_id", chatId);
+
+      if (messagesError) {
+        console.error("Error deleting messages:", messagesError);
+        toast({ title: "Ошибка", description: "Не удалось удалить сообщения чата", variant: "destructive" });
+        return;
+      }
+
+      // Удаляем участников чата
+      const { error: membersError } = await supabase
+        .from("chat_members")
+        .delete()
+        .eq("chat_id", chatId);
+
+      if (membersError) {
+        console.error("Error deleting chat members:", membersError);
+        toast({ title: "Ошибка", description: "Не удалось удалить участников чата", variant: "destructive" });
+        return;
+      }
+
+      // Удаляем сам чат
+      const { error: chatError } = await supabase
+        .from("chats")
+        .delete()
+        .eq("id", chatId);
+
+      if (chatError) {
+        console.error("Error deleting chat:", chatError);
+        toast({ title: "Ошибка", description: "Не удалось удалить чат", variant: "destructive" });
+        return;
+      }
+
+      toast({ title: "Успех", description: "Чат успешно удален" });
+      
+      // Обновляем список чатов
+      fetchChats();
+      
+      // Если удаляемый чат был выбран, сбрасываем выбор
+      if (selectedChat?.id === chatId) {
+        setSelectedChat(null);
+        setMessages([]);
+      }
+    } catch (error) {
+      console.error("Unexpected error deleting chat:", error);
+      toast({ title: "Ошибка", description: "Произошла неожиданная ошибка при удалении чата", variant: "destructive" });
+    }
+  };
+
+  const archiveChat = async (chatId: string) => {
+    if (!chatId) return;
+
+    try {
+      const { error } = await supabase
+        .from("chats")
+        .update({
+          archived: true,
+          archived_at: new Date().toISOString()
+        })
+        .eq("id", chatId);
+
+      if (error) {
+        console.error("Error archiving chat:", error);
+        toast({ title: "Ошибка", description: "Не удалось архивировать чат", variant: "destructive" });
+        return;
+      }
+
+      toast({ title: "Успех", description: "Чат перенесен в архив" });
+      
+      // Обновляем список чатов
+      fetchChats();
+      
+      // Если архивируемый чат был выбран, сбрасываем выбор
+      if (selectedChat?.id === chatId) {
+        setSelectedChat(null);
+        setMessages([]);
+      }
+    } catch (error) {
+      console.error("Unexpected error archiving chat:", error);
+      toast({ title: "Ошибка", description: "Произошла неожиданная ошибка при архивировании чата", variant: "destructive" });
+    }
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !selectedChat) return;
@@ -610,19 +702,43 @@ export default function MessengerDashboard() {
           <>
             {/* Chat header */}
             <div className="p-4 border-b bg-card">
-              <div className="flex items-center space-x-3">
-                <Avatar>
-                  <AvatarFallback>
-                    {selectedChat.type === "group" ? <Users className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="font-semibold">{selectedChat.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {getChatTypeDisplay(selectedChat.type)}
-                    {selectedChat.description && ` • ${selectedChat.description}`}
-                  </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Avatar>
+                    <AvatarFallback>
+                      {selectedChat.type === "group" ? <Users className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="font-semibold">{selectedChat.name}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {getChatTypeDisplay(selectedChat.type)}
+                      {selectedChat.description && ` • ${selectedChat.description}`}
+                    </p>
+                  </div>
                 </div>
+                
+                {/* Chat actions */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => archiveChat(selectedChat.id)}>
+                      <Archive className="h-4 w-4 mr-2" />
+                      Архивировать
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => deleteChat(selectedChat.id)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Удалить чат
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
 

@@ -51,6 +51,8 @@ export type Database = {
       }
       chats: {
         Row: {
+          archived: boolean | null
+          archived_at: string | null
           avatar_url: string | null
           created_at: string
           created_by: string
@@ -61,6 +63,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived?: boolean | null
+          archived_at?: string | null
           avatar_url?: string | null
           created_at?: string
           created_by: string
@@ -71,6 +75,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived?: boolean | null
+          archived_at?: string | null
           avatar_url?: string | null
           created_at?: string
           created_by?: string
