@@ -71,6 +71,7 @@ export const TaskCalendar = ({ employeeId }: TaskCalendarProps) => {
         .from('tasks')
         .select('*')
         .eq('assignee_id', targetEmployeeId)
+        .not('start_date', 'is', null) // Исключаем шаблонные задачи
         .or(`planned_date.gte.${format(monthStart, 'yyyy-MM-dd')},due_date.gte.${format(monthStart, 'yyyy-MM-dd')}`)
         .or(`start_date.lte.${format(monthEnd, 'yyyy-MM-dd')},planned_date.lte.${format(monthEnd, 'yyyy-MM-dd')},due_date.lte.${format(monthEnd, 'yyyy-MM-dd')},start_date.gte.${format(monthStart, 'yyyy-MM-dd')},planned_date.gte.${format(monthStart, 'yyyy-MM-dd')},due_date.gte.${format(monthStart, 'yyyy-MM-dd')}`);;
 

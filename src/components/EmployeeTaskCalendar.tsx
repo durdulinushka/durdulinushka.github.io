@@ -80,7 +80,8 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
           )
         `)
         .or(`start_date.lte.${format(calendarEnd, 'yyyy-MM-dd')},due_date.lte.${format(calendarEnd, 'yyyy-MM-dd')}`)
-        .or(`start_date.gte.${format(calendarStart, 'yyyy-MM-dd')},due_date.gte.${format(calendarStart, 'yyyy-MM-dd')}`);
+        .or(`start_date.gte.${format(calendarStart, 'yyyy-MM-dd')},due_date.gte.${format(calendarStart, 'yyyy-MM-dd')}`)
+        .not('start_date', 'is', null); // Исключаем шаблонные задачи без дат
 
       // Если передан employeeId, фильтруем только по этому сотруднику
       if (employeeId) {
