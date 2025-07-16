@@ -47,7 +47,7 @@ const TaskAcceptance = ({ tasks, onAcceptTask }: TaskAcceptanceProps) => {
   const completedTasks = tasks.filter(task => task.status === 'completed');
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
+    <div className="grid grid-cols-1 gap-8 max-w-none w-full">
       {/* Доступные задачи */}
       <Card className="xl:col-span-1">
         <CardHeader>
