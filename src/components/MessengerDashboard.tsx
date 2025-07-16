@@ -57,6 +57,7 @@ interface Message {
 
 interface Profile {
   id: string;
+  user_id: string;
   full_name: string;
   department: string;
   position: string;
@@ -100,13 +101,22 @@ export default function MessengerDashboard() {
 
   const getCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
+    if (user) {
+      // Get profile data to ensure we have the correct user_id
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, user_id")
+        .eq("user_id", user.id)
+        .single();
+      
+      setUser({ ...user, profile_id: profile?.id });
+    }
   };
 
   const fetchProfiles = async () => {
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, full_name, department, position");
+      .select("id, user_id, full_name, department, position");
 
     if (error) {
       toast({ title: "Ошибка", description: "Не удалось загрузить пользователей", variant: "destructive" });
@@ -299,13 +309,16 @@ export default function MessengerDashboard() {
         return;
       }
 
-      // Add selected members
+      // Add selected members - использовать user_id вместо id
       if (selectedMembers.length > 0) {
-        const memberInserts = selectedMembers.map(memberId => ({
-          chat_id: chat.id,
-          user_id: memberId,
-          role: "member"
-        }));
+        const memberInserts = selectedMembers.map(profileId => {
+          const profile = profiles.find(p => p.id === profileId);
+          return {
+            chat_id: chat.id,
+            user_id: profile?.user_id, // Использовать user_id из профиля
+            role: "member"
+          };
+        });
 
         const { error: membersError } = await supabase
           .from("chat_members")
@@ -473,7 +486,7 @@ export default function MessengerDashboard() {
                       </SelectTrigger>
                       <SelectContent>
                         {profiles
-                          .filter(p => p.id !== user?.id && !selectedMembers.includes(p.id))
+                          .filter(p => p.id !== user?.profile_id && !selectedMembers.includes(p.id))
                           .map(profile => (
                             <SelectItem key={profile.id} value={profile.id}>
                               {profile.full_name} - {profile.position}
