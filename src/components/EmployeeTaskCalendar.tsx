@@ -27,6 +27,7 @@ interface TaskForCalendar {
   description?: string;
   status: string;
   priority: string;
+  task_type?: string;
   start_date: string | null;
   due_date: string | null;
   assignee?: {
@@ -72,6 +73,7 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
           description,
           status,
           priority,
+          task_type,
           start_date,
           due_date,
           assignee:profiles!tasks_assignee_id_fkey(
@@ -98,15 +100,23 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
       const calendarData = days.map(day => {
         const dayTasks = (tasks || []).filter(task => {
           const dayStr = format(day, 'yyyy-MM-dd');
-          // Проверяем попадание в диапазон start_date - due_date
+          // Ежедневные задачи - отображаются только в назначенный день
+          if (task.task_type === 'daily') {
+            return task.start_date === dayStr;
+          }
+          
+          // Долгосрочные и срочные задачи - только в дату постановки и дедлайн
+          if (task.task_type === 'long-term' || task.task_type === 'urgent') {
+            return (task.start_date === dayStr) || (task.due_date === dayStr);
+          }
+          
+          // Другие типы задач - проверяем диапазон
           if (task.start_date && task.due_date) {
             return dayStr >= task.start_date && dayStr <= task.due_date;
           }
-          // Для задач только с due_date
           if (task.due_date && !task.start_date) {
             return task.due_date === dayStr;
           }
-          // Для задач только с start_date
           if (task.start_date && !task.due_date) {
             return task.start_date === dayStr;
           }

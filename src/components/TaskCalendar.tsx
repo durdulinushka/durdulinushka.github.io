@@ -16,6 +16,7 @@ export interface Task {
   description?: string;
   priority: string;
   status: string;
+  task_type?: string;
   start_date?: string;
   due_date?: string;
   planned_date?: string;
@@ -125,13 +126,21 @@ export const TaskCalendar = ({ employeeId }: TaskCalendarProps) => {
   const getTasksForDate = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     return tasks.filter(task => {
-      // Проверяем попадание в диапазон start_date - due_date
+      // Ежедневные задачи - отображаются только в назначенный день
+      if (task.task_type === 'daily') {
+        return task.start_date === dateStr;
+      }
+      
+      // Долгосрочные и срочные задачи - только в дату постановки и дедлайн
+      if (task.task_type === 'long-term' || task.task_type === 'urgent') {
+        return (task.start_date === dateStr) || (task.due_date === dateStr);
+      }
+      
+      // Обратная совместимость для других типов задач
       if (task.start_date && task.due_date) {
         return dateStr >= task.start_date && dateStr <= task.due_date;
       }
-      // Обратная совместимость с планируемой датой
       if (task.planned_date === dateStr) return true;
-      // Крайний срок
       if (task.due_date === dateStr) return true;
       return false;
     });

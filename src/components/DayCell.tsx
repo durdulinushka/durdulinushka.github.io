@@ -45,9 +45,22 @@ export const DayCell = ({ date, tasks, isCurrentMonth, isToday, onTaskMove }: Da
     e.preventDefault();
   };
 
-  const getTaskPositionInRange = (task: Task) => {
-    if (!task.start_date || !task.due_date) return 'single';
+  const getTaskDisplayType = (task: Task, dateStr: string) => {
+    // Для ежедневных задач - всегда одиночное отображение
+    if (task.task_type === 'daily') {
+      return 'single';
+    }
     
+    // Для долгосрочных и срочных задач определяем тип отображения
+    if (task.task_type === 'long-term' || task.task_type === 'urgent') {
+      if (task.start_date === dateStr && task.due_date === dateStr) return 'single';
+      if (task.start_date === dateStr) return 'start';
+      if (task.due_date === dateStr) return 'end';
+      return 'single'; // Не должно происходить с новой логикой
+    }
+    
+    // Для других типов задач - старая логика диапазона
+    if (!task.start_date || !task.due_date) return 'single';
     if (task.start_date === dateStr && task.due_date === dateStr) return 'single';
     if (task.start_date === dateStr) return 'start';
     if (task.due_date === dateStr) return 'end';
@@ -75,7 +88,7 @@ export const DayCell = ({ date, tasks, isCurrentMonth, isToday, onTaskMove }: Da
       
       <div className="space-y-1">
         {tasks.slice(0, 3).map(task => {
-          const position = getTaskPositionInRange(task);
+          const displayType = getTaskDisplayType(task, dateStr);
           return (
             <div
               key={task.id}
@@ -84,20 +97,21 @@ export const DayCell = ({ date, tasks, isCurrentMonth, isToday, onTaskMove }: Da
               className={cn(
                 "text-xs p-1.5 border cursor-move hover:opacity-80 transition-opacity relative",
                 getPriorityColor(task.priority),
-                position === 'start' && "rounded-l border-r-0",
-                position === 'middle' && "rounded-none border-r-0 border-l-0",
-                position === 'end' && "rounded-r border-l-0",
-                position === 'single' && "rounded"
+                displayType === 'start' && "rounded-l border-r-0",
+                displayType === 'middle' && "rounded-none border-r-0 border-l-0",
+                displayType === 'end' && "rounded-r border-l-0",
+                displayType === 'single' && "rounded"
               )}
               title={`${task.title}${task.description ? '\n' + task.description : ''}${
-                task.start_date && task.due_date ? `\nПериод: ${task.start_date} - ${task.due_date}` : ''
+                task.start_date && task.due_date && task.start_date !== task.due_date 
+                  ? `\nПериод: ${task.start_date} - ${task.due_date}` 
+                  : ''
               }`}
             >
               <div className="flex items-center justify-between gap-1">
                 <div className="truncate font-medium flex-1">
-                  {position === 'start' && '▶ '}
-                  {position === 'middle' && '━ '}
-                  {position === 'end' && '◀ '}
+                  {displayType === 'start' && task.task_type !== 'daily' && '📅 '}
+                  {displayType === 'end' && task.task_type !== 'daily' && '⏰ '}
                   {task.title}
                 </div>
                 <span className="text-xs opacity-70">{getStatusIcon(task.status)}</span>
