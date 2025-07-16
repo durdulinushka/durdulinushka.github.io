@@ -290,12 +290,17 @@ export default function MessengerDashboard() {
     }
 
     try {
+      // Получаем текущего пользователя из Supabase Auth
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      
       console.log("Creating chat with data:", {
         name: newChatName,
         type: newChatType,
         description: newChatDescription,
-        created_by: user?.id,
-        selectedMembers
+        created_by: authUser?.id,
+        selectedMembers,
+        authUserId: authUser?.id,
+        userStateId: user?.id
       });
 
       const { data: chat, error: chatError } = await supabase
@@ -304,7 +309,7 @@ export default function MessengerDashboard() {
           name: newChatName,
           type: newChatType,
           description: newChatDescription,
-          created_by: user?.id // Используем user.id который является auth.uid()
+          created_by: authUser?.id // Используем authUser.id напрямую из getUser()
         })
         .select()
         .single();
