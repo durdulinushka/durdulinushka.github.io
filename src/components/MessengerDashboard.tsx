@@ -826,7 +826,11 @@ export default function MessengerDashboard() {
                   onKeyPress={(e) => e.key === "Enter" && sendMessage()}
                 />
                 
-                <Button onClick={sendMessage} size="sm">
+                <Button 
+                  onClick={sendMessage} 
+                  size="sm"
+                  disabled={!newMessage.trim() || !selectedChat || !user}
+                >
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
