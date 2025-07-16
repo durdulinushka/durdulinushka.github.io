@@ -32,12 +32,12 @@ Deno.serve(async (req) => {
 
     console.log('Starting daily tasks duplication...');
 
-    // Получаем все ежедневные задачи (бессрочные)
+    // Получаем все ежедневные задачи-шаблоны (без дат или бессрочные)
     const { data: dailyTasks, error: fetchError } = await supabaseClient
       .from('tasks')
       .select('*')
       .eq('task_type', 'daily')
-      .is('due_date', null); // Бессрочные задачи
+      .or('due_date.is.null,start_date.is.null'); // Шаблонные задачи без дат
 
     if (fetchError) {
       console.error('Error fetching daily tasks:', fetchError);
@@ -60,19 +60,22 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Проверяем, есть ли уже задачи на сегодня для каждого сотрудника
-    const today = new Date().toISOString().split('T')[0];
+    // Проверяем, есть ли уже задачи на завтра для каждого сотрудника
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    
     const tasksToCreate = [];
 
     for (const task of dailyTasks) {
-      // Проверяем, есть ли уже такая задача на сегодня
+      // Проверяем, есть ли уже такая задача на завтра
       const { data: existingTask } = await supabaseClient
         .from('tasks')
         .select('id')
         .eq('title', task.title)
         .eq('assignee_id', task.assignee_id)
         .eq('task_type', 'daily')
-        .eq('start_date', today)
+        .eq('start_date', tomorrowStr)
         .single();
 
       if (!existingTask) {
@@ -82,8 +85,8 @@ Deno.serve(async (req) => {
           assignee_id: task.assignee_id,
           priority: task.priority,
           task_type: task.task_type,
-          start_date: today,
-          due_date: null, // Бессрочная
+          start_date: tomorrowStr,
+          due_date: tomorrowStr, // Должна быть выполнена в тот же день
           department: task.department,
           creator_id: task.creator_id,
           status: 'pending'
@@ -95,7 +98,7 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: 'All daily tasks already exist for today',
+          message: 'All daily tasks already exist for tomorrow',
           duplicated: 0
         }),
         { 
