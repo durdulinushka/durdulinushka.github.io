@@ -61,7 +61,7 @@ const TaskAcceptance = ({ tasks, onAcceptTask }: TaskAcceptanceProps) => {
             <p className="text-sm text-muted-foreground">Нет доступных задач</p>
           ) : (
             availableTasks.map((task) => (
-            <div key={task.id} className="border rounded-lg p-6 space-y-3">
+            <div key={task.id} className="border rounded-lg p-8 space-y-4 min-h-[200px]">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
                   <h4 className="font-medium text-lg">{task.title}</h4>
@@ -115,7 +115,7 @@ const TaskAcceptance = ({ tasks, onAcceptTask }: TaskAcceptanceProps) => {
             <p className="text-sm text-muted-foreground">Нет завершенных задач</p>
           ) : (
             completedTasks.map((task) => (
-              <div key={task.id} className="border rounded-lg p-6 space-y-3 opacity-75">
+              <div key={task.id} className="border rounded-lg p-8 space-y-4 min-h-[200px] opacity-75">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
                     <h4 className="font-medium text-lg line-through text-muted-foreground">{task.title}</h4>
