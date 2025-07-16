@@ -281,7 +281,7 @@ export default function MessengerDashboard() {
           name: newChatName,
           type: newChatType,
           description: newChatDescription,
-          created_by: user?.id
+          created_by: user?.id // Используем user.id который является auth.uid()
         })
         .select()
         .single();
