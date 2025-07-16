@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Calendar, User, Plus, UserCheck, Archive, FileText, LogOut, Filter } from "lucide-react";
+import { Users, Calendar, User, Plus, UserCheck, Archive, FileText, LogOut, Filter, MessageSquare } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import EmployeeList from "@/components/EmployeeList";
 import TaskManagement from "@/components/TaskManagement";
@@ -15,6 +15,7 @@ import { ImpersonateEmployeeDialog } from "./ImpersonateEmployeeDialog";
 import DepartmentManagement from "./DepartmentManagement";
 import MaterialsManagement from "./MaterialsManagement";
 import EmployeeTaskCalendar from "./EmployeeTaskCalendar";
+import MessengerDashboard from "./MessengerDashboard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -32,7 +33,7 @@ interface Stats {
 }
 
 const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: AdminDashboardProps) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'projects' | 'tasks' | 'departments' | 'materials' | 'archive' | 'reports'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'projects' | 'tasks' | 'departments' | 'materials' | 'archive' | 'reports' | 'messenger'>('overview');
   const [stats, setStats] = useState<Stats>({
     totalEmployees: 0,
     activeToday: 0,
@@ -196,6 +197,13 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
             onClick={() => setActiveTab('reports')}
           >
             Отчеты
+          </Button>
+          <Button 
+            variant={activeTab === 'messenger' ? 'corporate' : 'ghost'}
+            onClick={() => setActiveTab('messenger')}
+          >
+            <MessageSquare className="w-4 h-4 mr-2" />
+            Мессенджер
           </Button>
         </div>
 
@@ -367,6 +375,9 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
 
         {/* Отчеты по задачам */}
         {activeTab === 'reports' && <TaskCommentsAndDocs />}
+
+        {/* Мессенджер */}
+        {activeTab === 'messenger' && <MessengerDashboard />}
       </div>
 
       {/* Диалог входа как сотрудник */}
