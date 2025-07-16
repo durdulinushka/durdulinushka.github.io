@@ -128,63 +128,86 @@ export default function MessengerDashboard() {
 
   const fetchChats = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("chats")
-      .select(`
-        *,
-        chat_members!inner(
-          user_id,
-          role,
-          profiles(full_name)
-        )
-      `)
-      .eq("chat_members.user_id", user?.id)
-      .order("updated_at", { ascending: false });
+    
+    try {
+      // Сначала получаем чаты, где пользователь является участником
+      const { data: userMemberships, error: memberError } = await supabase
+        .from("chat_members")
+        .select("chat_id")
+        .eq("user_id", user?.id);
 
-    if (error) {
-      toast({ title: "Ошибка", description: "Не удалось загрузить чаты", variant: "destructive" });
-      setLoading(false);
-      return;
-    }
+      if (memberError) {
+        console.error("Member error:", memberError);
+        toast({ title: "Ошибка", description: "Не удалось загрузить участников чатов", variant: "destructive" });
+        setLoading(false);
+        return;
+      }
 
-    // Fetch last message for each chat
-    const chatsWithLastMessage = await Promise.all(
-      (data || []).map(async (chat) => {
-        const { data: lastMessage } = await supabase
-          .from("messages")
-          .select(`
-            content,
-            created_at,
-            sender_id
-          `)
-          .eq("chat_id", chat.id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .single();
+      if (!userMemberships || userMemberships.length === 0) {
+        setChats([]);
+        setLoading(false);
+        return;
+      }
 
-        let senderName = "Неизвестный";
-        if (lastMessage) {
-          const { data: senderProfile } = await supabase
-            .from("profiles")
-            .select("full_name")
-            .eq("user_id", lastMessage.sender_id)
+      const chatIds = userMemberships.map(m => m.chat_id);
+
+      // Теперь получаем сами чаты
+      const { data: chatsData, error: chatsError } = await supabase
+        .from("chats")
+        .select("*")
+        .in("id", chatIds)
+        .order("updated_at", { ascending: false });
+
+      if (chatsError) {
+        console.error("Chats error:", chatsError);
+        toast({ title: "Ошибка", description: "Не удалось загрузить чаты", variant: "destructive" });
+        setLoading(false);
+        return;
+      }
+
+      // Fetch last message for each chat
+      const chatsWithLastMessage = await Promise.all(
+        (chatsData || []).map(async (chat) => {
+          const { data: lastMessage } = await supabase
+            .from("messages")
+            .select(`
+              content,
+              created_at,
+              sender_id
+            `)
+            .eq("chat_id", chat.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
             .single();
-          
-          senderName = senderProfile?.full_name || "Неизвестный";
-        }
 
-        return {
-          ...chat,
-          last_message: lastMessage ? {
-            content: lastMessage.content,
-            created_at: lastMessage.created_at,
-            sender: { full_name: senderName }
-          } : null
-        };
-      })
-    );
+          let senderName = "Неизвестный";
+          if (lastMessage) {
+            const { data: senderProfile } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("user_id", lastMessage.sender_id)
+              .single();
+            
+            senderName = senderProfile?.full_name || "Неизвестный";
+          }
 
-    setChats(chatsWithLastMessage);
+          return {
+            ...chat,
+            last_message: lastMessage ? {
+              content: lastMessage.content,
+              created_at: lastMessage.created_at,
+              sender: { full_name: senderName }
+            } : null
+          };
+        })
+      );
+
+      setChats(chatsWithLastMessage);
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      toast({ title: "Ошибка", description: "Произошла неожиданная ошибка при загрузке чатов", variant: "destructive" });
+    }
+    
     setLoading(false);
   };
 
