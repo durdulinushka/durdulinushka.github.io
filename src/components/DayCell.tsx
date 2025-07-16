@@ -45,6 +45,15 @@ export const DayCell = ({ date, tasks, isCurrentMonth, isToday, onTaskMove }: Da
     e.preventDefault();
   };
 
+  const getTaskPositionInRange = (task: Task) => {
+    if (!task.start_date || !task.due_date) return 'single';
+    
+    if (task.start_date === dateStr && task.due_date === dateStr) return 'single';
+    if (task.start_date === dateStr) return 'start';
+    if (task.due_date === dateStr) return 'end';
+    return 'middle';
+  };
+
   return (
     <div
       className={cn(
@@ -65,26 +74,40 @@ export const DayCell = ({ date, tasks, isCurrentMonth, isToday, onTaskMove }: Da
       </div>
       
       <div className="space-y-1">
-        {tasks.slice(0, 3).map(task => (
-          <div
-            key={task.id}
-            draggable
-            onDragStart={(e) => e.dataTransfer.setData('text/plain', task.id)}
-            className={cn(
-              "text-xs p-1.5 rounded border cursor-move hover:opacity-80 transition-opacity relative",
-              getPriorityColor(task.priority)
-            )}
-            title={`${task.title}${task.description ? '\n' + task.description : ''}`}
-          >
-            <div className="flex items-center justify-between gap-1">
-              <div className="truncate font-medium flex-1">{task.title}</div>
-              <span className="text-xs opacity-70">{getStatusIcon(task.status)}</span>
+        {tasks.slice(0, 3).map(task => {
+          const position = getTaskPositionInRange(task);
+          return (
+            <div
+              key={task.id}
+              draggable
+              onDragStart={(e) => e.dataTransfer.setData('text/plain', task.id)}
+              className={cn(
+                "text-xs p-1.5 border cursor-move hover:opacity-80 transition-opacity relative",
+                getPriorityColor(task.priority),
+                position === 'start' && "rounded-l border-r-0",
+                position === 'middle' && "rounded-none border-r-0 border-l-0",
+                position === 'end' && "rounded-r border-l-0",
+                position === 'single' && "rounded"
+              )}
+              title={`${task.title}${task.description ? '\n' + task.description : ''}${
+                task.start_date && task.due_date ? `\nПериод: ${task.start_date} - ${task.due_date}` : ''
+              }`}
+            >
+              <div className="flex items-center justify-between gap-1">
+                <div className="truncate font-medium flex-1">
+                  {position === 'start' && '▶ '}
+                  {position === 'middle' && '━ '}
+                  {position === 'end' && '◀ '}
+                  {task.title}
+                </div>
+                <span className="text-xs opacity-70">{getStatusIcon(task.status)}</span>
+              </div>
+              {task.status === 'completed' && (
+                <div className="absolute inset-0 bg-muted/20 rounded border-dashed"></div>
+              )}
             </div>
-            {task.status === 'completed' && (
-              <div className="absolute inset-0 bg-muted/20 rounded border-dashed"></div>
-            )}
-          </div>
-        ))}
+          );
+        })}
         
         {tasks.length > 3 && (
           <div className="text-xs text-muted-foreground text-center py-1 bg-muted/30 rounded border border-dashed">

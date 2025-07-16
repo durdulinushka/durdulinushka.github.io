@@ -16,8 +16,9 @@ export interface Task {
   description?: string;
   priority: string;
   status: string;
-  planned_date?: string;
+  start_date?: string;
   due_date?: string;
+  planned_date?: string;
 }
 
 interface TaskCalendarProps {
@@ -71,7 +72,7 @@ export const TaskCalendar = ({ employeeId }: TaskCalendarProps) => {
         .select('*')
         .eq('assignee_id', targetEmployeeId)
         .or(`planned_date.gte.${format(monthStart, 'yyyy-MM-dd')},due_date.gte.${format(monthStart, 'yyyy-MM-dd')}`)
-        .or(`planned_date.lte.${format(monthEnd, 'yyyy-MM-dd')},due_date.lte.${format(monthEnd, 'yyyy-MM-dd')}`);;
+        .or(`start_date.lte.${format(monthEnd, 'yyyy-MM-dd')},planned_date.lte.${format(monthEnd, 'yyyy-MM-dd')},due_date.lte.${format(monthEnd, 'yyyy-MM-dd')},start_date.gte.${format(monthStart, 'yyyy-MM-dd')},planned_date.gte.${format(monthStart, 'yyyy-MM-dd')},due_date.gte.${format(monthStart, 'yyyy-MM-dd')}`);;
 
       if (error) throw error;
       setTasks(data || []);
@@ -122,9 +123,17 @@ export const TaskCalendar = ({ employeeId }: TaskCalendarProps) => {
 
   const getTasksForDate = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    return tasks.filter(task => 
-      task.planned_date === dateStr || task.due_date === dateStr
-    );
+    return tasks.filter(task => {
+      // Проверяем попадание в диапазон start_date - due_date
+      if (task.start_date && task.due_date) {
+        return dateStr >= task.start_date && dateStr <= task.due_date;
+      }
+      // Обратная совместимость с планируемой датой
+      if (task.planned_date === dateStr) return true;
+      // Крайний срок
+      if (task.due_date === dateStr) return true;
+      return false;
+    });
   };
 
   const getTotalTasksForMonth = () => {

@@ -24,6 +24,7 @@ interface Task {
   assignee_name: string;
   priority: 'low' | 'medium' | 'high';
   task_type: 'daily' | 'long-term' | 'urgent';
+  start_date: string | null;
   due_date: string | null;
   status: 'pending' | 'in-progress' | 'completed';
   department: string;
@@ -90,6 +91,7 @@ const TaskManagement = () => {
         assignee_name: task.assignee?.full_name || 'Не назначен',
         priority: task.priority as 'low' | 'medium' | 'high',
         task_type: task.task_type as 'daily' | 'long-term' | 'urgent',
+        start_date: task.start_date,
         due_date: task.due_date,
         status: task.status as 'pending' | 'in-progress' | 'completed',
         department: task.department,

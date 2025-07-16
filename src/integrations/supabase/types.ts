@@ -496,6 +496,7 @@ export type Database = {
           planned_date: string | null
           priority: string | null
           project_id: string | null
+          start_date: string | null
           status: string | null
           task_type: string | null
           title: string
@@ -516,6 +517,7 @@ export type Database = {
           planned_date?: string | null
           priority?: string | null
           project_id?: string | null
+          start_date?: string | null
           status?: string | null
           task_type?: string | null
           title: string
@@ -536,6 +538,7 @@ export type Database = {
           planned_date?: string | null
           priority?: string | null
           project_id?: string | null
+          start_date?: string | null
           status?: string | null
           task_type?: string | null
           title?: string

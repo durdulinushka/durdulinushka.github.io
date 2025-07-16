@@ -36,7 +36,7 @@ export const AddProjectTaskDialog = ({
     description: "",
     priority: "medium",
     assignee_id: "",
-    planned_date: "",
+    start_date: "",
     due_date: "",
   });
   const [members, setMembers] = useState<ProjectMember[]>([]);
@@ -93,7 +93,7 @@ export const AddProjectTaskDialog = ({
           creator_id: (await supabase.auth.getUser()).data.user?.id || null,
           department: project.department,
           project_id: project.id,
-          planned_date: formData.planned_date || null,
+          start_date: formData.start_date || null,
           due_date: formData.due_date || null,
           status: 'pending',
         });
@@ -110,7 +110,7 @@ export const AddProjectTaskDialog = ({
         description: "",
         priority: "medium",
         assignee_id: "",
-        planned_date: "",
+        start_date: "",
         due_date: "",
       });
       onTaskAdded();
@@ -195,16 +195,16 @@ export const AddProjectTaskDialog = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="planned_date">Дата планирования</Label>
+              <Label htmlFor="start_date">Начало периода выполнения</Label>
               <Input
-                id="planned_date"
+                id="start_date"
                 type="date"
-                value={formData.planned_date}
-                onChange={(e) => setFormData({ ...formData, planned_date: e.target.value })}
+                value={formData.start_date}
+                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="due_date">Срок выполнения</Label>
+              <Label htmlFor="due_date">Окончание периода выполнения</Label>
               <Input
                 id="due_date"
                 type="date"

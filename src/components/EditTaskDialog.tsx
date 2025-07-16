@@ -14,6 +14,7 @@ interface Task {
   assignee_id: string;
   priority: 'low' | 'medium' | 'high';
   task_type: 'daily' | 'long-term' | 'urgent';
+  start_date: string | null;
   due_date: string | null;
   status: 'pending' | 'in-progress' | 'completed';
   department: string;
@@ -47,6 +48,7 @@ export const EditTaskDialog = ({
     assignee_id: "",
     priority: "medium",
     task_type: "daily",
+    start_date: "",
     due_date: "",
     department: ""
   });
@@ -61,6 +63,7 @@ export const EditTaskDialog = ({
         assignee_id: task.assignee_id,
         priority: task.priority,
         task_type: task.task_type,
+        start_date: task.start_date || "",
         due_date: task.due_date || "",
         department: task.department
       });
@@ -89,6 +92,7 @@ export const EditTaskDialog = ({
           assignee_id: editedTask.assignee_id,
           priority: editedTask.priority,
           task_type: editedTask.task_type,
+          start_date: editedTask.start_date || null,
           due_date: editedTask.due_date || null,
           department: selectedProfile?.department || editedTask.department,
           updated_at: new Date().toISOString()
@@ -184,12 +188,36 @@ export const EditTaskDialog = ({
               </SelectContent>
             </Select>
 
-            <Input 
-              type="date" 
-              placeholder="Срок выполнения" 
-              value={editedTask.due_date}
-              onChange={(e) => setEditedTask({...editedTask, due_date: e.target.value})}
-            />
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Срок выполнения</label>
+              <Input 
+                type="date" 
+                placeholder="Срок выполнения" 
+                value={editedTask.due_date}
+                onChange={(e) => setEditedTask({...editedTask, due_date: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Начало периода выполнения</label>
+              <Input 
+                type="date" 
+                placeholder="Дата начала" 
+                value={editedTask.start_date}
+                onChange={(e) => setEditedTask({...editedTask, start_date: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Окончание периода выполнения</label>
+              <Input 
+                type="date" 
+                placeholder="Дата окончания" 
+                value={editedTask.due_date}
+                onChange={(e) => setEditedTask({...editedTask, due_date: e.target.value})}
+              />
+            </div>
           </div>
 
           <Input 
