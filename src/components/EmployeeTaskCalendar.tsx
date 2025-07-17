@@ -105,9 +105,9 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
             return task.start_date === dayStr;
           }
           
-          // Долгосрочные и срочные задачи - только в дату постановки и дедлайн
+          // Долгосрочные и срочные задачи - только в дату дедлайна
           if (task.task_type === 'long-term' || task.task_type === 'urgent') {
-            return (task.start_date === dayStr) || (task.due_date === dayStr);
+            return task.due_date === dayStr;
           }
           
           // Другие типы задач - проверяем диапазон

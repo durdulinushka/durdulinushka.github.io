@@ -131,9 +131,9 @@ export const TaskCalendar = ({ employeeId }: TaskCalendarProps) => {
         return task.start_date === dateStr;
       }
       
-      // Долгосрочные и срочные задачи - только в дату постановки и дедлайн
+      // Долгосрочные и срочные задачи - только в дату дедлайна
       if (task.task_type === 'long-term' || task.task_type === 'urgent') {
-        return (task.start_date === dateStr) || (task.due_date === dateStr);
+        return task.due_date === dateStr;
       }
       
       // Обратная совместимость для других типов задач

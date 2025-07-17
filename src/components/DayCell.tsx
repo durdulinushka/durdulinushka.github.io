@@ -51,12 +51,9 @@ export const DayCell = ({ date, tasks, isCurrentMonth, isToday, onTaskMove }: Da
       return 'single';
     }
     
-    // Для долгосрочных и срочных задач определяем тип отображения
+    // Для долгосрочных и срочных задач - всегда одиночное отображение (только в дату дедлайна)
     if (task.task_type === 'long-term' || task.task_type === 'urgent') {
-      if (task.start_date === dateStr && task.due_date === dateStr) return 'single';
-      if (task.start_date === dateStr) return 'start';
-      if (task.due_date === dateStr) return 'end';
-      return 'single'; // Не должно происходить с новой логикой
+      return 'single';
     }
     
     // Для других типов задач - старая логика диапазона
@@ -110,8 +107,7 @@ export const DayCell = ({ date, tasks, isCurrentMonth, isToday, onTaskMove }: Da
             >
               <div className="flex items-center justify-between gap-1">
                 <div className="truncate font-medium flex-1">
-                  {displayType === 'start' && task.task_type !== 'daily' && '📅 '}
-                  {displayType === 'end' && task.task_type !== 'daily' && '⏰ '}
+                  {(task.task_type === 'long-term' || task.task_type === 'urgent') && '⏰ '}
                   {task.title}
                 </div>
                 <span className="text-xs opacity-70">{getStatusIcon(task.status)}</span>
