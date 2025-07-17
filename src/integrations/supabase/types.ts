@@ -236,6 +236,78 @@ export type Database = {
           },
         ]
       }
+      note_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          note_id: string
+          uploader_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          note_id: string
+          uploader_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          note_id?: string
+          uploader_id?: string
+        }
+        Relationships: []
+      }
+      personal_notes: {
+        Row: {
+          color: string | null
+          content: string | null
+          created_at: string
+          employee_id: string
+          id: string
+          position_x: number | null
+          position_y: number | null
+          reminder_date: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          content?: string | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          position_x?: number | null
+          position_y?: number | null
+          reminder_date?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          content?: string | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          position_x?: number | null
+          position_y?: number | null
+          reminder_date?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

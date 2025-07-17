@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowUp, Clock, Pause, User, LogOut, BarChart3, Settings, Calendar, MessageSquare } from "lucide-react";
+import { ArrowUp, Clock, Pause, User, LogOut, BarChart3, Settings, Calendar, MessageSquare, StickyNote } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import TaskTracker from "@/components/TaskTracker";
 import EmployeeTaskCalendar from "@/components/EmployeeTaskCalendar";
@@ -12,6 +12,7 @@ import EmployeeHoursStats from "@/components/EmployeeHoursStats";
 import { EditProfileNameDialog } from "@/components/EditProfileNameDialog";
 import MessengerDashboard from "@/components/MessengerDashboard";
 import { TasksByDeadline } from "@/components/TasksByDeadline";
+import { PersonalNotes } from "@/components/PersonalNotes";
 import { supabase } from "@/integrations/supabase/client";
 
 interface EmployeeDashboardProps {
@@ -145,7 +146,7 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
 
         {/* Навигация с вкладками */}
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
               Рабочий стол
@@ -169,6 +170,10 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
             <TabsTrigger value="messenger" className="flex items-center gap-2">
               <MessageSquare className="w-4 h-4" />
               Сообщения
+            </TabsTrigger>
+            <TabsTrigger value="notes" className="flex items-center gap-2">
+              <StickyNote className="w-4 h-4" />
+              Заметки
             </TabsTrigger>
           </TabsList>
 
@@ -271,6 +276,11 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
           {/* Вкладка: Мессенджер */}
           <TabsContent value="messenger" className="space-y-6">
             <MessengerDashboard />
+          </TabsContent>
+
+          {/* Вкладка: Личные заметки */}
+          <TabsContent value="notes" className="space-y-6">
+            <PersonalNotes />
           </TabsContent>
         </Tabs>
       </div>
