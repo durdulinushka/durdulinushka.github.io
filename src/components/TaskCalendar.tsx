@@ -129,14 +129,9 @@ export const TaskCalendar = ({ employeeId }: TaskCalendarProps) => {
     const today = format(new Date(), 'yyyy-MM-dd');
     
     return tasks.filter(task => {
-      // Ежедневные задачи - отображаются каждый день, если не выполнены сегодня
+      // Ежедневные задачи - отображаются каждый день, если не выполнены
       if (task.task_type === 'daily') {
-        // Если дата в календаре - сегодня, показываем только невыполненные
-        if (dateStr === today) {
-          return task.status !== 'completed';
-        }
-        // Для других дней (прошлых и будущих) не показываем ежедневные задачи
-        return false;
+        return task.status !== 'completed';
       }
       
       // Долгосрочные и срочные задачи - только в дату дедлайна
