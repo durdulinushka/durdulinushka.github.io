@@ -98,11 +98,18 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
       const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
       
       const calendarData = days.map(day => {
+        const dayStr = format(day, 'yyyy-MM-dd');
+        const today = format(new Date(), 'yyyy-MM-dd');
+        
         const dayTasks = (tasks || []).filter(task => {
-          const dayStr = format(day, 'yyyy-MM-dd');
-          // Ежедневные задачи - отображаются только в назначенный день
+          // Ежедневные задачи - отображаются только если не выполнены на сегодня
           if (task.task_type === 'daily') {
-            return task.start_date === dayStr;
+            // Показываем только если это сегодня и задача не выполнена
+            if (dayStr === today) {
+              return task.start_date === dayStr && task.status !== 'completed';
+            }
+            // Для других дней не показываем ежедневные задачи
+            return false;
           }
           
           // Долгосрочные и срочные задачи - только в дату дедлайна
