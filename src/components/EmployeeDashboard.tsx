@@ -11,6 +11,7 @@ import EmployeeTaskColumns from "@/components/EmployeeTaskColumns";
 import EmployeeHoursStats from "@/components/EmployeeHoursStats";
 import { EditProfileNameDialog } from "@/components/EditProfileNameDialog";
 import MessengerDashboard from "@/components/MessengerDashboard";
+import { TasksByDeadline } from "@/components/TasksByDeadline";
 import { supabase } from "@/integrations/supabase/client";
 
 interface EmployeeDashboardProps {
@@ -144,10 +145,14 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
 
         {/* Навигация с вкладками */}
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
               Рабочий стол
+            </TabsTrigger>
+            <TabsTrigger value="deadlines" className="flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              По срокам
             </TabsTrigger>
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="w-4 h-4" />
@@ -180,6 +185,11 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
 
             {/* Календарь задач - на всю ширину */}
             <EmployeeTaskCalendar employeeId={employeeId} />
+          </TabsContent>
+
+          {/* Вкладка: По срокам */}
+          <TabsContent value="deadlines" className="space-y-6">
+            <TasksByDeadline employeeId={employeeId} />
           </TabsContent>
 
           {/* Вкладка: Профиль */}

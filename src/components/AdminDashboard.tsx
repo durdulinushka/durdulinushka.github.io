@@ -14,6 +14,7 @@ import { AddEmployeeDialog } from "./AddEmployeeDialog";
 import { ImpersonateEmployeeDialog } from "./ImpersonateEmployeeDialog";
 import DepartmentManagement from "./DepartmentManagement";
 import MaterialsManagement from "./MaterialsManagement";
+import { TasksByDeadline } from "./TasksByDeadline";
 import EmployeeTaskCalendar from "./EmployeeTaskCalendar";
 import MessengerDashboard from "./MessengerDashboard";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,7 +34,7 @@ interface Stats {
 }
 
 const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: AdminDashboardProps) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'projects' | 'tasks' | 'departments' | 'materials' | 'archive' | 'reports' | 'messenger'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'projects' | 'tasks' | 'deadlines' | 'departments' | 'materials' | 'archive' | 'reports' | 'messenger'>('overview');
   const [stats, setStats] = useState<Stats>({
     totalEmployees: 0,
     activeToday: 0,
@@ -171,6 +172,12 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
             onClick={() => setActiveTab('tasks')}
           >
             Задачи
+          </Button>
+          <Button 
+            variant={activeTab === 'deadlines' ? 'corporate' : 'ghost'}
+            onClick={() => setActiveTab('deadlines')}
+          >
+            По срокам
           </Button>
           <Button 
             variant={activeTab === 'departments' ? 'corporate' : 'ghost'}
@@ -363,6 +370,9 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
 
         {/* Управление задачами */}
         {activeTab === 'tasks' && <TaskManagement />}
+
+        {/* Задачи по срокам */}
+        {activeTab === 'deadlines' && <TasksByDeadline />}
 
         {/* Управление отделами */}
         {activeTab === 'departments' && <DepartmentManagement />}
