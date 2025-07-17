@@ -152,7 +152,7 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
             </TabsTrigger>
             <TabsTrigger value="deadlines" className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
-              По срокам
+              Сроки
             </TabsTrigger>
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="w-4 h-4" />

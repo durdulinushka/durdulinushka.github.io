@@ -177,7 +177,7 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
             variant={activeTab === 'deadlines' ? 'corporate' : 'ghost'}
             onClick={() => setActiveTab('deadlines')}
           >
-            По срокам
+            Сроки
           </Button>
           <Button 
             variant={activeTab === 'departments' ? 'corporate' : 'ghost'}
