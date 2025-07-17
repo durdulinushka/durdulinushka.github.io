@@ -13,6 +13,7 @@ import { EditProfileNameDialog } from "@/components/EditProfileNameDialog";
 import MessengerDashboard from "@/components/MessengerDashboard";
 import { TasksByDeadline } from "@/components/TasksByDeadline";
 import { PersonalNotes } from "@/components/PersonalNotes";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { supabase } from "@/integrations/supabase/client";
 
 interface EmployeeDashboardProps {
@@ -30,12 +31,16 @@ interface Employee {
 const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: EmployeeDashboardProps) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [employeeId, setEmployeeId] = useState<string>("");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [employee, setEmployee] = useState<Employee>({
     name: "Загрузка...",
     department: "Загрузка...",
     position: "Загрузка...",
     dailyHours: 8
   });
+
+  // Используем хук для отслеживания непрочитанных сообщений
+  const { unreadCount } = useUnreadMessages(currentUserId);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -54,6 +59,7 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
         
         if (data) {
           setEmployeeId(data.id);
+          setCurrentUserId(data.id);
           setEmployee({
             name: data.full_name,
             department: data.department,
@@ -73,6 +79,7 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
           
           if (data) {
             setEmployeeId(data.id);
+            setCurrentUserId(data.id);
             setEmployee({
               name: data.full_name,
               department: data.department,
@@ -167,9 +174,14 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
               <Clock className="w-4 h-4" />
               Часы
             </TabsTrigger>
-            <TabsTrigger value="messenger" className="flex items-center gap-2">
+            <TabsTrigger value="messenger" className="flex items-center gap-2 relative">
               <MessageSquare className="w-4 h-4" />
               Сообщения
+              {unreadCount > 0 && (
+                <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="notes" className="flex items-center gap-2">
               <StickyNote className="w-4 h-4" />
