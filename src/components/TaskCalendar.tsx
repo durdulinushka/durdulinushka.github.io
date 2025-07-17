@@ -71,12 +71,13 @@ export const TaskCalendar = ({ employeeId }: TaskCalendarProps) => {
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
-        .eq('assignee_id', targetEmployeeId)
-        .not('start_date', 'is', null) // Исключаем шаблонные задачи
-        .or(`planned_date.gte.${format(monthStart, 'yyyy-MM-dd')},due_date.gte.${format(monthStart, 'yyyy-MM-dd')}`)
-        .or(`start_date.lte.${format(monthEnd, 'yyyy-MM-dd')},planned_date.lte.${format(monthEnd, 'yyyy-MM-dd')},due_date.lte.${format(monthEnd, 'yyyy-MM-dd')},start_date.gte.${format(monthStart, 'yyyy-MM-dd')},planned_date.gte.${format(monthStart, 'yyyy-MM-dd')},due_date.gte.${format(monthStart, 'yyyy-MM-dd')}`);;
+        .eq('assignee_id', targetEmployeeId);
 
       if (error) throw error;
+      
+      console.log('Loaded tasks:', data);
+      console.log('Daily tasks:', data?.filter(t => t.task_type === 'daily'));
+      
       setTasks(data || []);
     } catch (error) {
       console.error('Error fetching tasks:', error);
@@ -128,13 +129,13 @@ export const TaskCalendar = ({ employeeId }: TaskCalendarProps) => {
     const today = format(new Date(), 'yyyy-MM-dd');
     
     return tasks.filter(task => {
-      // Ежедневные задачи - отображаются только если не выполнены на сегодня
+      // Ежедневные задачи - отображаются каждый день, если не выполнены сегодня
       if (task.task_type === 'daily') {
-        // Показываем только если это сегодня и задача не выполнена
+        // Если дата в календаре - сегодня, показываем только невыполненные
         if (dateStr === today) {
-          return task.start_date === dateStr && task.status !== 'completed';
+          return task.status !== 'completed';
         }
-        // Для других дней не показываем ежедневные задачи
+        // Для других дней (прошлых и будущих) не показываем ежедневные задачи
         return false;
       }
       

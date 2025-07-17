@@ -102,13 +102,13 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
         const today = format(new Date(), 'yyyy-MM-dd');
         
         const dayTasks = (tasks || []).filter(task => {
-          // Ежедневные задачи - отображаются только если не выполнены на сегодня
+          // Ежедневные задачи - отображаются каждый день, если не выполнены сегодня
           if (task.task_type === 'daily') {
-            // Показываем только если это сегодня и задача не выполнена
+            // Если дата в календаре - сегодня, показываем только невыполненные
             if (dayStr === today) {
-              return task.start_date === dayStr && task.status !== 'completed';
+              return task.status !== 'completed';
             }
-            // Для других дней не показываем ежедневные задачи
+            // Для других дней (прошлых и будущих) не показываем ежедневные задачи
             return false;
           }
           
