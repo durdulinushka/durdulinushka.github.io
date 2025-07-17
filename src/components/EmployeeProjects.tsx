@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, FolderOpen, MapPin } from "lucide-react";
+import { Users, Calendar, FolderOpen, MapPin, FileText, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ProjectMaterials } from "./ProjectMaterials";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 
@@ -194,6 +195,13 @@ export const EmployeeProjects = ({ employeeId }: EmployeeProjectsProps) => {
                           Участвую с {format(new Date(membership.added_at), 'dd.MM.yyyy', { locale: ru })}
                         </span>
                       </div>
+                    </div>
+                    
+                    <div className="mt-3 pt-3 border-t">
+                      <ProjectMaterials 
+                        projectId={membership.project.id} 
+                        projectName={membership.project.name} 
+                      />
                     </div>
                   </CardContent>
                 </Card>

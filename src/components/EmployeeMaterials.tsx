@@ -25,6 +25,7 @@ interface Material {
   access_type: 'public' | 'department' | 'selected_users';
   department: string | null;
   allowed_users: string[];
+  project_id: string | null;
   created_at: string;
   uploader_name?: string;
 }
@@ -36,6 +37,11 @@ interface Profile {
   position: string;
 }
 
+interface Project {
+  id: string;
+  name: string;
+}
+
 interface EmployeeMaterialsProps {
   employeeId: string;
 }
@@ -43,6 +49,7 @@ interface EmployeeMaterialsProps {
 export const EmployeeMaterials = ({ employeeId }: EmployeeMaterialsProps) => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [currentUserProfile, setCurrentUserProfile] = useState<Profile | null>(null);
   const [departments, setDepartments] = useState<string[]>([]);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
@@ -55,6 +62,7 @@ export const EmployeeMaterials = ({ employeeId }: EmployeeMaterialsProps) => {
     description: "",
     access_type: "public" as 'public' | 'department' | 'selected_users',
     department: "",
+    project_id: "",
     allowed_users: [] as string[]
   });
   const { toast } = useToast();
@@ -64,6 +72,7 @@ export const EmployeeMaterials = ({ employeeId }: EmployeeMaterialsProps) => {
     fetchMaterials();
     fetchProfiles();
     fetchDepartments();
+    fetchUserProjects();
   }, [employeeId]);
 
   const fetchCurrentUserProfile = async () => {
@@ -109,6 +118,7 @@ export const EmployeeMaterials = ({ employeeId }: EmployeeMaterialsProps) => {
         access_type: material.access_type as 'public' | 'department' | 'selected_users',
         department: material.department,
         allowed_users: Array.isArray(material.allowed_users) ? material.allowed_users.map(id => String(id)) : [],
+        project_id: material.project_id,
         created_at: material.created_at,
         uploader_name: material.uploader?.full_name || 'Неизвестен'
       })) || [];
@@ -152,6 +162,26 @@ export const EmployeeMaterials = ({ employeeId }: EmployeeMaterialsProps) => {
     }
   };
 
+  const fetchUserProjects = async () => {
+    if (!employeeId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('project_members')
+        .select(`
+          project:projects(id, name)
+        `)
+        .eq('employee_id', employeeId);
+
+      if (error) throw error;
+      
+      const userProjects = data?.map(pm => pm.project).filter(Boolean) || [];
+      setProjects(userProjects);
+    } catch (error) {
+      console.error('Error fetching user projects:', error);
+    }
+  };
+
   const handleFileUpload = async () => {
     if (!selectedFile || !currentUserProfile) return;
 
@@ -179,6 +209,7 @@ export const EmployeeMaterials = ({ employeeId }: EmployeeMaterialsProps) => {
           uploader_id: currentUserProfile.id,
           access_type: newMaterial.access_type,
           department: newMaterial.access_type === 'department' ? (newMaterial.department || currentUserProfile.department) : null,
+          project_id: newMaterial.project_id || null,
           allowed_users: newMaterial.access_type === 'selected_users' ? newMaterial.allowed_users : []
         });
 
@@ -236,6 +267,7 @@ export const EmployeeMaterials = ({ employeeId }: EmployeeMaterialsProps) => {
       description: "",
       access_type: "public",
       department: "",
+      project_id: "",
       allowed_users: []
     });
     setSelectedFile(null);
@@ -436,6 +468,24 @@ export const EmployeeMaterials = ({ employeeId }: EmployeeMaterialsProps) => {
                   <SelectItem value="public">Для всех</SelectItem>
                   <SelectItem value="department">Для отдела</SelectItem>
                   <SelectItem value="selected_users">Для выбранных пользователей</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Проект (необязательно)</label>
+              <Select 
+                value={newMaterial.project_id} 
+                onValueChange={(value) => setNewMaterial(prev => ({ ...prev, project_id: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите проект" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Без проекта</SelectItem>
+                  {projects.map(project => (
+                    <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

@@ -135,6 +135,7 @@ export type Database = {
           file_size: number | null
           file_type: string | null
           id: string
+          project_id: string | null
           title: string
           updated_at: string
           uploader_id: string
@@ -150,6 +151,7 @@ export type Database = {
           file_size?: number | null
           file_type?: string | null
           id?: string
+          project_id?: string | null
           title: string
           updated_at?: string
           uploader_id: string
@@ -165,11 +167,19 @@ export type Database = {
           file_size?: number | null
           file_type?: string | null
           id?: string
+          project_id?: string | null
           title?: string
           updated_at?: string
           uploader_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "materials_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "materials_uploader_id_fkey"
             columns: ["uploader_id"]
