@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -50,6 +51,8 @@ export const PersonalNotes = () => {
   const [selectedNote, setSelectedNote] = useState<PersonalNote | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [reminderNote, setReminderNote] = useState<PersonalNote | null>(null);
+  const [isReminderDialogOpen, setIsReminderDialogOpen] = useState(false);
   const [newNote, setNewNote] = useState({
     title: '',
     content: '',
@@ -57,6 +60,30 @@ export const PersonalNotes = () => {
     reminder_date: ''
   });
   const { toast } = useToast();
+
+  // Функция для воспроизведения звука напоминания
+  const playReminderSound = () => {
+    try {
+      // Создаем простой звуковой сигнал используя Web Audio API
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 1);
+    } catch (error) {
+      console.warn('Не удалось воспроизвести звук напоминания:', error);
+    }
+  };
 
   const fetchNotes = async () => {
     try {
@@ -315,6 +342,14 @@ export const PersonalNotes = () => {
         
         // Показываем напоминание если время наступило (в пределах 1 минуты)
         if (timeDiff <= 60000 && timeDiff > -60000) {
+          // Воспроизводим звук
+          playReminderSound();
+          
+          // Показываем всплывающее окно
+          setReminderNote(note);
+          setIsReminderDialogOpen(true);
+          
+          // Дополнительно показываем toast
           toast({
             title: "Напоминание",
             description: `${note.title}: ${note.content}`,
@@ -606,6 +641,34 @@ export const PersonalNotes = () => {
           <p className="text-sm">Создайте первую заметку, чтобы начать</p>
         </div>
       )}
+
+      {/* Всплывающее окно напоминания */}
+      <AlertDialog open={isReminderDialogOpen} onOpenChange={setIsReminderDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-blue-500" />
+              Напоминание
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <h3 className="font-semibold text-lg text-foreground">{reminderNote?.title}</h3>
+                <p className="text-muted-foreground">{reminderNote?.content}</p>
+                {reminderNote?.reminder_date && (
+                  <p className="text-sm text-muted-foreground">
+                    Время: {format(new Date(reminderNote.reminder_date), 'dd.MM.yyyy HH:mm', { locale: ru })}
+                  </p>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setIsReminderDialogOpen(false)}>
+              Понятно
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
