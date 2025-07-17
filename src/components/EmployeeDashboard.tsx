@@ -13,6 +13,7 @@ import { EditProfileNameDialog } from "@/components/EditProfileNameDialog";
 import MessengerDashboard from "@/components/MessengerDashboard";
 import { TasksByDeadline } from "@/components/TasksByDeadline";
 import { PersonalNotes } from "@/components/PersonalNotes";
+import { NotificationsPanel } from "@/components/NotificationsPanel";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -114,7 +115,8 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
               })}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <NotificationsPanel currentUserId={currentUserId} />
             <ThemeToggle />
             <Button variant="outline" onClick={onBack}>
               <LogOut className="w-4 h-4 mr-2" />
