@@ -136,6 +136,13 @@ export const PersonalNotes = () => {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return;
 
+      // Конвертируем локальное время в UTC для сохранения
+      let reminderDateUTC = null;
+      if (newNote.reminder_date) {
+        const localDate = new Date(newNote.reminder_date);
+        reminderDateUTC = localDate.toISOString();
+      }
+
       const { error } = await supabase
         .from('personal_notes')
         .insert({
@@ -143,7 +150,7 @@ export const PersonalNotes = () => {
           title: newNote.title,
           content: newNote.content,
           color: newNote.color,
-          reminder_date: newNote.reminder_date || null
+          reminder_date: reminderDateUTC
         });
 
       if (error) throw error;
@@ -170,13 +177,21 @@ export const PersonalNotes = () => {
     if (!selectedNote) return;
 
     try {
+      // Конвертируем локальное время в UTC для сохранения
+      let reminderDateUTC = selectedNote.reminder_date;
+      if (selectedNote.reminder_date && !selectedNote.reminder_date.includes('T')) {
+        // Если это локальное время из input
+        const localDate = new Date(selectedNote.reminder_date);
+        reminderDateUTC = localDate.toISOString();
+      }
+
       const { error } = await supabase
         .from('personal_notes')
         .update({
           title: selectedNote.title,
           content: selectedNote.content,
           color: selectedNote.color,
-          reminder_date: selectedNote.reminder_date
+          reminder_date: reminderDateUTC
         })
         .eq('id', selectedNote.id);
 
