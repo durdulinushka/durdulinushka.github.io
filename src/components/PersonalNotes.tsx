@@ -305,9 +305,35 @@ export const PersonalNotes = () => {
     return colorConfig ? `${colorConfig.bg} ${colorConfig.border}` : 'bg-yellow-100 border-yellow-300';
   };
 
+  // Проверка напоминаний
+  const checkReminders = () => {
+    const now = new Date();
+    notes.forEach(note => {
+      if (note.reminder_date) {
+        const reminderTime = new Date(note.reminder_date);
+        const timeDiff = reminderTime.getTime() - now.getTime();
+        
+        // Показываем напоминание если время наступило (в пределах 1 минуты)
+        if (timeDiff <= 60000 && timeDiff > -60000) {
+          toast({
+            title: "Напоминание",
+            description: `${note.title}: ${note.content}`,
+            duration: 10000,
+          });
+        }
+      }
+    });
+  };
+
   useEffect(() => {
     fetchNotes();
   }, []);
+
+  useEffect(() => {
+    // Проверяем напоминания каждую минуту
+    const interval = setInterval(checkReminders, 60000);
+    return () => clearInterval(interval);
+  }, [notes]);
 
   if (loading) {
     return <div className="flex justify-center p-8">Загрузка заметок...</div>;
