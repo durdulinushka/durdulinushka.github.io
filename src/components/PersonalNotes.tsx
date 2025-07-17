@@ -179,8 +179,8 @@ export const PersonalNotes = () => {
     try {
       // Конвертируем локальное время в UTC для сохранения
       let reminderDateUTC = selectedNote.reminder_date;
-      if (selectedNote.reminder_date && !selectedNote.reminder_date.includes('T')) {
-        // Если это локальное время из input
+      if (selectedNote.reminder_date && selectedNote.reminder_date.includes('T') && selectedNote.reminder_date.length === 16) {
+        // Если это локальное время из input (формат YYYY-MM-DDTHH:MM)
         const localDate = new Date(selectedNote.reminder_date);
         reminderDateUTC = localDate.toISOString();
       }
@@ -378,14 +378,14 @@ export const PersonalNotes = () => {
   // Функция для конвертации UTC времени в локальное для input
   const formatDateTimeForInput = (utcDateString: string | null) => {
     if (!utcDateString) return '';
-    const date = new Date(utcDateString);
-    // Получаем локальное время и форматируем для datetime-local input
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+    // Если строка уже в формате для input (YYYY-MM-DDTHH:MM), возвращаем как есть
+    if (utcDateString.includes('T') && utcDateString.length === 16) {
+      return utcDateString;
+    }
+    // Если это UTC время из базы данных, конвертируем в локальное
+    const utcDate = new Date(utcDateString);
+    const localDate = new Date(utcDate.getTime() - utcDate.getTimezoneOffset() * 60000);
+    return localDate.toISOString().slice(0, 16);
   };
 
   useEffect(() => {
