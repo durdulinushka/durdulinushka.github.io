@@ -209,7 +209,7 @@ export const EmployeeMaterials = ({ employeeId }: EmployeeMaterialsProps) => {
           uploader_id: currentUserProfile.id,
           access_type: newMaterial.access_type,
           department: newMaterial.access_type === 'department' ? (newMaterial.department || currentUserProfile.department) : null,
-          project_id: newMaterial.project_id || null,
+          project_id: newMaterial.project_id === "none" ? null : newMaterial.project_id || null,
           allowed_users: newMaterial.access_type === 'selected_users' ? newMaterial.allowed_users : []
         });
 
@@ -482,7 +482,7 @@ export const EmployeeMaterials = ({ employeeId }: EmployeeMaterialsProps) => {
                   <SelectValue placeholder="Выберите проект" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Без проекта</SelectItem>
+                  <SelectItem value="none">Без проекта</SelectItem>
                   {projects.map(project => (
                     <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
                   ))}
