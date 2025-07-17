@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Calendar, User, Plus, UserCheck, Archive, FileText, LogOut, Filter, MessageSquare } from "lucide-react";
+import { Users, Calendar, User, Plus, UserCheck, Archive, FileText, LogOut, Filter, MessageSquare, Home, Building, CheckSquare, Clock, Building2, BarChart3 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import EmployeeList from "@/components/EmployeeList";
 import TaskManagement from "@/components/TaskManagement";
@@ -153,36 +153,42 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
             variant={activeTab === 'overview' ? 'corporate' : 'ghost'}
             onClick={() => setActiveTab('overview')}
           >
+            <Home className="w-4 h-4 mr-2" />
             Обзор
           </Button>
           <Button 
             variant={activeTab === 'employees' ? 'corporate' : 'ghost'}
             onClick={() => setActiveTab('employees')}
           >
+            <Users className="w-4 h-4 mr-2" />
             Сотрудники
           </Button>
           <Button 
             variant={activeTab === 'projects' ? 'corporate' : 'ghost'}
             onClick={() => setActiveTab('projects')}
           >
+            <Building className="w-4 h-4 mr-2" />
             Проекты
           </Button>
           <Button 
             variant={activeTab === 'tasks' ? 'corporate' : 'ghost'}
             onClick={() => setActiveTab('tasks')}
           >
+            <CheckSquare className="w-4 h-4 mr-2" />
             Задачи
           </Button>
           <Button 
             variant={activeTab === 'deadlines' ? 'corporate' : 'ghost'}
             onClick={() => setActiveTab('deadlines')}
           >
+            <Clock className="w-4 h-4 mr-2" />
             Сроки
           </Button>
           <Button 
             variant={activeTab === 'departments' ? 'corporate' : 'ghost'}
             onClick={() => setActiveTab('departments')}
           >
+            <Building2 className="w-4 h-4 mr-2" />
             Отделы
           </Button>
           <Button 
@@ -203,6 +209,7 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
             variant={activeTab === 'reports' ? 'corporate' : 'ghost'}
             onClick={() => setActiveTab('reports')}
           >
+            <BarChart3 className="w-4 h-4 mr-2" />
             Отчеты
           </Button>
           <Button 
