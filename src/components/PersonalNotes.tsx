@@ -360,6 +360,19 @@ export const PersonalNotes = () => {
     });
   };
 
+  // Функция для конвертации UTC времени в локальное для input
+  const formatDateTimeForInput = (utcDateString: string | null) => {
+    if (!utcDateString) return '';
+    const date = new Date(utcDateString);
+    // Получаем локальное время и форматируем для datetime-local input
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   useEffect(() => {
     fetchNotes();
   }, []);
@@ -557,7 +570,7 @@ export const PersonalNotes = () => {
                 <Input
                   id="edit-reminder"
                   type="datetime-local"
-                  value={selectedNote.reminder_date ? selectedNote.reminder_date.slice(0, 16) : ''}
+                  value={formatDateTimeForInput(selectedNote.reminder_date)}
                   onChange={(e) => setSelectedNote({ ...selectedNote, reminder_date: e.target.value || null })}
                 />
               </div>
