@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowUp, Clock, Pause, User, LogOut, BarChart3, Settings, Calendar, MessageSquare, StickyNote } from "lucide-react";
+import { ArrowUp, Clock, Pause, User, LogOut, BarChart3, Settings, Calendar, MessageSquare, StickyNote, FolderOpen, FileText } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import TaskTracker from "@/components/TaskTracker";
 import EmployeeTaskCalendar from "@/components/EmployeeTaskCalendar";
@@ -13,6 +13,8 @@ import { EditProfileNameDialog } from "@/components/EditProfileNameDialog";
 import MessengerDashboard from "@/components/MessengerDashboard";
 import { TasksByDeadline } from "@/components/TasksByDeadline";
 import { PersonalNotes } from "@/components/PersonalNotes";
+import { EmployeeProjects } from "@/components/EmployeeProjects";
+import { EmployeeMaterials } from "@/components/EmployeeMaterials";
 import { NotificationsPanel } from "@/components/NotificationsPanel";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { supabase } from "@/integrations/supabase/client";
@@ -155,7 +157,7 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
 
         {/* Навигация с вкладками */}
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-9">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
               Рабочий стол
@@ -184,6 +186,14 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </Badge>
               )}
+            </TabsTrigger>
+            <TabsTrigger value="projects" className="flex items-center gap-2">
+              <FolderOpen className="w-4 h-4" />
+              Проекты
+            </TabsTrigger>
+            <TabsTrigger value="materials" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Материалы
             </TabsTrigger>
             <TabsTrigger value="notes" className="flex items-center gap-2">
               <StickyNote className="w-4 h-4" />
@@ -290,6 +300,16 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
           {/* Вкладка: Мессенджер */}
           <TabsContent value="messenger" className="space-y-6">
             <MessengerDashboard />
+          </TabsContent>
+
+          {/* Вкладка: Проекты */}
+          <TabsContent value="projects" className="space-y-6">
+            <EmployeeProjects employeeId={employeeId} />
+          </TabsContent>
+
+          {/* Вкладка: Материалы */}
+          <TabsContent value="materials" className="space-y-6">
+            <EmployeeMaterials employeeId={employeeId} />
           </TabsContent>
 
           {/* Вкладка: Личные заметки */}
