@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Plus, User, Bell, Upload, MessageSquare, Edit, Archive, Eye, EyeOff, Clock } from "lucide-react";
+import { Calendar, Plus, User, Bell, Upload, MessageSquare, Edit, Archive, Eye, EyeOff, Clock, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { EditTaskDialog } from "./EditTaskDialog";
@@ -26,7 +26,7 @@ interface Task {
   task_type: 'daily' | 'long-term' | 'urgent';
   start_date: string | null;
   due_date: string | null;
-  status: 'pending' | 'in-progress' | 'completed';
+  status: 'pending' | 'in-progress' | 'completed' | 'overdue';
   department: string;
   created_at: string;
   viewed_by: string[];
@@ -65,9 +65,40 @@ const TaskManagement = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    updateOverdueTasks();
     fetchTasks();
     fetchProfiles();
+    fetchOverdueStats();
   }, []);
+
+  const updateOverdueTasks = async () => {
+    try {
+      const { error } = await supabase.rpc('update_overdue_tasks');
+      if (error) {
+        console.error('Error updating overdue tasks:', error);
+      }
+    } catch (error) {
+      console.error('Error updating overdue tasks:', error);
+    }
+  };
+
+  const fetchOverdueStats = async () => {
+    try {
+      const { data, error } = await supabase.rpc('get_overdue_stats');
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        setOverdueStats({
+          total_overdue: Number(data[0].total_overdue) || 0,
+          overdue_urgent: Number(data[0].overdue_urgent) || 0,
+          overdue_long_term: Number(data[0].overdue_long_term) || 0,
+          days_overdue_avg: Number(data[0].days_overdue_avg) || 0
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching overdue stats:', error);
+    }
+  };
 
   const fetchTasks = async () => {
     try {
@@ -93,7 +124,7 @@ const TaskManagement = () => {
         task_type: task.task_type as 'daily' | 'long-term' | 'urgent',
         start_date: task.start_date,
         due_date: task.due_date,
-        status: task.status as 'pending' | 'in-progress' | 'completed',
+        status: task.status as 'pending' | 'in-progress' | 'completed' | 'overdue',
         department: task.department,
         created_at: task.created_at,
         viewed_by: Array.isArray(task.viewed_by) ? task.viewed_by.map(id => String(id)) : [],
@@ -176,6 +207,7 @@ const TaskManagement = () => {
 
       toast({ title: "Успех", description: "Статус задачи обновлен" });
       fetchTasks();
+      fetchOverdueStats();
     } catch (error) {
       console.error('Error updating task status:', error);
       toast({ title: "Ошибка", description: "Не удалось обновить статус", variant: "destructive" });
@@ -260,6 +292,8 @@ const TaskManagement = () => {
         return 'В работе';
       case 'completed':
         return 'Выполнено';
+      case 'overdue':
+        return 'Просрочено';
       default:
         return status;
     }
@@ -290,17 +324,30 @@ const TaskManagement = () => {
   // Получаем уникальные отделы из задач
   const uniqueDepartments = Array.from(new Set(tasks.map(task => task.department)));
 
+  const [overdueStats, setOverdueStats] = useState<{
+    total_overdue: number;
+    overdue_urgent: number;
+    overdue_long_term: number;
+    days_overdue_avg: number;
+  }>({
+    total_overdue: 0,
+    overdue_urgent: 0,
+    overdue_long_term: 0,
+    days_overdue_avg: 0
+  });
+
   const taskStats = {
     total: tasks.length,
     pending: tasks.filter(t => t.status === 'pending').length,
     inProgress: tasks.filter(t => t.status === 'in-progress').length,
-    completed: tasks.filter(t => t.status === 'completed').length
+    completed: tasks.filter(t => t.status === 'completed').length,
+    overdue: tasks.filter(t => t.status === 'overdue').length
   };
 
   return (
     <div className="space-y-6">
       {/* Статистика */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-corporate-blue">{taskStats.total}</div>
@@ -325,7 +372,41 @@ const TaskManagement = () => {
             <div className="text-sm text-muted-foreground">Выполнено</div>
           </CardContent>
         </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-red-600">{taskStats.overdue}</div>
+            <div className="text-sm text-muted-foreground">Просрочено</div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Детальная статистика просроченных задач */}
+      {overdueStats.total_overdue > 0 && (
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader>
+            <CardTitle className="text-red-800 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" />
+              Статистика просроченных задач
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-600">{overdueStats.overdue_urgent}</div>
+                <div className="text-sm text-red-700">Срочных просрочено</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-600">{overdueStats.overdue_long_term}</div>
+                <div className="text-sm text-red-700">Долгосрочных просрочено</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-600">{Math.round(overdueStats.days_overdue_avg)}</div>
+                <div className="text-sm text-red-700">Среднее просрочено дней</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Управление задачами */}
       <Card>
@@ -382,6 +463,7 @@ const TaskManagement = () => {
                 <SelectItem value="pending">Ожидают</SelectItem>
                 <SelectItem value="in-progress">В работе</SelectItem>
                 <SelectItem value="completed">Выполнено</SelectItem>
+                <SelectItem value="overdue">Просрочено</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterDepartment} onValueChange={setFilterDepartment}>

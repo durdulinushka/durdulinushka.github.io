@@ -16,7 +16,7 @@ interface Task {
   task_type: 'daily' | 'long-term' | 'urgent';
   start_date: string | null;
   due_date: string | null;
-  status: 'pending' | 'in-progress' | 'completed';
+  status: 'pending' | 'in-progress' | 'completed' | 'overdue';
   department: string;
 }
 

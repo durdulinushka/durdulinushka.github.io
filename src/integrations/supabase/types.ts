@@ -748,6 +748,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_overdue_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_overdue: number
+          overdue_urgent: number
+          overdue_long_term: number
+          days_overdue_avg: number
+        }[]
+      }
       is_chat_admin: {
         Args: { chat_id: string; user_id: string }
         Returns: boolean
@@ -755,6 +764,10 @@ export type Database = {
       is_chat_member: {
         Args: { chat_id: string; user_id: string }
         Returns: boolean
+      }
+      update_overdue_tasks: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {
