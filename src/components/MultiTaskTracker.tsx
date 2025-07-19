@@ -167,16 +167,11 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
     const savedPausesMs = (activeTask.timeRecord.pause_duration || 0) * 60 * 1000;
     totalTime -= savedPausesMs;
     
-    // Если задача сейчас на паузе, НЕ вычитаем текущее время паузы
-    // так как время паузы уже учтено в pause_duration
-    
-    console.log(`Task ${activeTask.task.title}:`, {
-      taskStartTime: new Date(taskStartTime).toISOString(),
-      now: new Date(now).toISOString(),
-      rawTime: now - taskStartTime,
-      savedPausesMs,
-      finalWorkedTime: Math.max(0, totalTime)
-    });
+    // Если задача сейчас на паузе, вычитаем время с момента начала паузы
+    if (activeTask.status === 'paused' && activeTask.pauseStart) {
+      const currentPauseDuration = now - activeTask.pauseStart.getTime();
+      totalTime -= currentPauseDuration;
+    }
     
     return Math.max(0, totalTime);
   };
