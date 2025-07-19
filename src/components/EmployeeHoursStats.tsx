@@ -16,6 +16,8 @@ interface HoursStats {
   dailyAverage: number;
   tasksWeek: number;
   tasksMonth: number;
+  overdueTasksWeek: number;
+  overdueTasksMonth: number;
   dailyHours: number; // Норма часов в день
 }
 
@@ -27,6 +29,8 @@ const EmployeeHoursStats = ({ employeeId }: EmployeeHoursStatsProps) => {
     dailyAverage: 0,
     tasksWeek: 0,
     tasksMonth: 0,
+    overdueTasksWeek: 0,
+    overdueTasksMonth: 0,
     dailyHours: 8
   });
   const [loading, setLoading] = useState(true);
@@ -106,6 +110,22 @@ const EmployeeHoursStats = ({ employeeId }: EmployeeHoursStatsProps) => {
         .eq('status', 'completed')
         .gte('completed_at', startOfMonth.toISOString());
 
+      // Просроченные задачи за неделю
+      const { data: overdueWeekTasks } = await supabase
+        .from('tasks')
+        .select('id')
+        .eq('assignee_id', employeeId)
+        .eq('status', 'overdue')
+        .gte('updated_at', startOfWeek.toISOString());
+
+      // Просроченные задачи за месяц
+      const { data: overdueMonthTasks } = await supabase
+        .from('tasks')
+        .select('id')
+        .eq('assignee_id', employeeId)
+        .eq('status', 'overdue')
+        .gte('updated_at', startOfMonth.toISOString());
+
       setStats({
         today: todayHours,
         thisWeek: weekHours,
@@ -113,6 +133,8 @@ const EmployeeHoursStats = ({ employeeId }: EmployeeHoursStatsProps) => {
         dailyAverage,
         tasksWeek: weekTasks?.length || 0,
         tasksMonth: monthTasks?.length || 0,
+        overdueTasksWeek: overdueWeekTasks?.length || 0,
+        overdueTasksMonth: overdueMonthTasks?.length || 0,
         dailyHours
       });
     } catch (error) {
@@ -390,7 +412,7 @@ const EmployeeHoursStats = ({ employeeId }: EmployeeHoursStatsProps) => {
           <h2 className="text-xl font-semibold">Выполненные задачи</h2>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="dashboard-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">За неделю</CardTitle>
@@ -413,6 +435,32 @@ const EmployeeHoursStats = ({ employeeId }: EmployeeHoursStatsProps) => {
               <div className="text-2xl font-bold text-primary">{stats.tasksMonth}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 Задач завершено
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="dashboard-card border-red-200 bg-red-50/50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">За неделю</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">{stats.overdueTasksWeek}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Задач просрочено
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="dashboard-card border-red-200 bg-red-50/50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">За месяц</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">{stats.overdueTasksMonth}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Задач просрочено
               </p>
             </CardContent>
           </Card>
