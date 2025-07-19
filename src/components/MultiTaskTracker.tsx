@@ -29,6 +29,7 @@ interface ActiveTaskItem {
   pausedTime: number;
   pauseStart: Date | null;
   status: 'working' | 'paused';
+  frozenTime?: number; // Время, зафиксированное для задач на паузе
 }
 
 interface TimeTrackingRecord {
@@ -133,12 +134,12 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
 
       for (const record of timeRecords || []) {
         if (record.tasks) {
-          // Для задач на паузе - рассчитываем зафиксированное время на момент паузы
-          let pausedTime = 0;
+          // Для задач на паузе рассчитываем зафиксированное время
+          let frozenTime = 0;
           if (record.status === 'paused') {
             const taskStart = new Date(record.start_time!).getTime();
             const savedPauses = (record.pause_duration || 0) * 60 * 1000;
-            pausedTime = Date.now() - taskStart - savedPauses;
+            frozenTime = Date.now() - taskStart - savedPauses;
           }
 
           const activeItem: ActiveTaskItem = {
@@ -149,9 +150,10 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
               status: record.status as 'not-started' | 'working' | 'paused' | 'finished'
             },
             startTime: new Date(record.start_time!),
-            pausedTime: Math.max(0, pausedTime),
+            pausedTime: 0,
             pauseStart: record.status === 'paused' ? new Date() : null,
-            status: record.status as 'working' | 'paused'
+            status: record.status as 'working' | 'paused',
+            frozenTime: record.status === 'paused' ? Math.max(0, frozenTime) : undefined
           };
           activeTaskItems.push(activeItem);
         }
@@ -165,10 +167,9 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
   };
 
   const getWorkedTime = (activeTask: ActiveTaskItem) => {
-    // Если задача на паузе - показываем ТОЛЬКО зафиксированное время
+    // Если задача на паузе - используем frozenTime (зафиксированное время)
     if (activeTask.status === 'paused') {
-      // Используем зафиксированное время, которое было на момент паузы
-      return activeTask.pausedTime || 0;
+      return activeTask.frozenTime || 0;
     }
     
     // Если задача в работе - считаем от времени старта до сейчас минус паузы
@@ -271,7 +272,7 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
           ? { 
               ...task, 
               status: 'paused', 
-              pausedTime: workedTime, // Фиксируем время на момент паузы
+              frozenTime: workedTime, // Замораживаем время на момент паузы
               pauseStart: new Date(),
               timeRecord: { ...task.timeRecord, status: 'paused' }
             }
