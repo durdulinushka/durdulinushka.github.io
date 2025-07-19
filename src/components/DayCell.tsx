@@ -15,7 +15,12 @@ export const DayCell = ({ date, tasks, isCurrentMonth, isToday, onTaskMove }: Da
   const dateStr = format(date, 'yyyy-MM-dd');
   const dayNumber = format(date, 'd');
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: string, status: string) => {
+    // Для просроченных задач используем красный фон
+    if (status === 'overdue') {
+      return 'bg-red-500/90 text-white border-red-600';
+    }
+    
     switch (priority) {
       case 'high': return 'bg-corporate-red/20 text-red-700 border-red-200';
       case 'medium': return 'bg-corporate-orange/20 text-orange-700 border-orange-200';
@@ -29,6 +34,7 @@ export const DayCell = ({ date, tasks, isCurrentMonth, isToday, onTaskMove }: Da
       case 'completed': return '✓';
       case 'in-progress': return '⚡';
       case 'pending': return '⏳';
+      case 'overdue': return '🚨';
       default: return '';
     }
   };
@@ -93,11 +99,12 @@ export const DayCell = ({ date, tasks, isCurrentMonth, isToday, onTaskMove }: Da
               onDragStart={(e) => e.dataTransfer.setData('text/plain', task.id)}
               className={cn(
                 "text-xs p-1.5 border cursor-move hover:opacity-80 transition-opacity relative",
-                getPriorityColor(task.priority),
+                getPriorityColor(task.priority, task.status),
                 displayType === 'start' && "rounded-l border-r-0",
                 displayType === 'middle' && "rounded-none border-r-0 border-l-0",
                 displayType === 'end' && "rounded-r border-l-0",
-                displayType === 'single' && "rounded"
+                displayType === 'single' && "rounded",
+                task.status === 'overdue' && "animate-pulse"
               )}
               title={`${task.title}${task.description ? '\n' + task.description : ''}${
                 task.start_date && task.due_date && task.start_date !== task.due_date 

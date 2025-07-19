@@ -16,7 +16,7 @@ import { PersonalNotes } from "@/components/PersonalNotes";
 import { EmployeeProjects } from "@/components/EmployeeProjects";
 import { EmployeeMaterials } from "@/components/EmployeeMaterials";
 import { NotificationsPanel } from "@/components/NotificationsPanel";
-import EmployeeOverdueTasks from "@/components/EmployeeOverdueTasks";
+
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -219,7 +219,6 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
 
           {/* Вкладка: По срокам */}
           <TabsContent value="deadlines" className="space-y-6">
-            <EmployeeOverdueTasks employeeId={employeeId} />
             <TasksByDeadline employeeId={employeeId} />
           </TabsContent>
 
