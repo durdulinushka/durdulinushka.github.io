@@ -158,22 +158,22 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
 
   const getWorkedTime = (activeTask: ActiveTaskItem) => {
     const now = currentTime.getTime();
-    const startTime = new Date(activeTask.timeRecord.start_time!).getTime();
+    const taskStartTime = new Date(activeTask.timeRecord.start_time!).getTime();
     
-    // Базовое отработанное время
-    let totalWorked = now - startTime;
+    // Рассчитываем отработанное время только для этой задачи
+    let workedTime = now - taskStartTime;
     
-    // Вычитаем все паузы (в миллисекундах)
-    const pauseDurationMs = (activeTask.timeRecord.pause_duration || 0) * 60 * 1000;
-    totalWorked -= pauseDurationMs;
+    // Вычитаем паузы только этой задачи (конвертируем минуты в миллисекунды)
+    const taskPauseDurationMs = (activeTask.timeRecord.pause_duration || 0) * 60 * 1000;
+    workedTime -= taskPauseDurationMs;
     
-    // Если сейчас на паузе, вычитаем текущее время паузы
+    // Если задача сейчас на паузе, вычитаем текущее время паузы
     if (activeTask.status === 'paused' && activeTask.pauseStart) {
       const currentPauseDuration = now - activeTask.pauseStart.getTime();
-      totalWorked -= currentPauseDuration;
+      workedTime -= currentPauseDuration;
     }
     
-    return Math.max(0, totalWorked);
+    return Math.max(0, workedTime);
   };
 
   const formatTime = (milliseconds: number) => {
