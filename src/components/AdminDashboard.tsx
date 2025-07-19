@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Calendar, User, Plus, UserCheck, Archive, FileText, LogOut, Filter, MessageSquare, Home, Building, CheckSquare, Clock, Building2, BarChart3 } from "lucide-react";
+import { Users, Calendar, User, Plus, UserCheck, Archive, FileText, LogOut, Filter, MessageSquare, Home, Building, CheckSquare, Clock, Building2, BarChart3, AlertTriangle } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import EmployeeList from "@/components/EmployeeList";
 import TaskManagement from "@/components/TaskManagement";
@@ -16,6 +16,7 @@ import DepartmentManagement from "./DepartmentManagement";
 import MaterialsManagement from "./MaterialsManagement";
 import { TasksByDeadline } from "./TasksByDeadline";
 import EmployeeTaskCalendar from "./EmployeeTaskCalendar";
+import OverdueTasksStats from "./OverdueTasksStats";
 import MessengerDashboard from "./MessengerDashboard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -31,15 +32,17 @@ interface Stats {
   activeToday: number;
   pendingTasks: number;
   completedToday: number;
+  overdueTasks: number;
 }
 
 const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: AdminDashboardProps) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'projects' | 'tasks' | 'deadlines' | 'departments' | 'materials' | 'archive' | 'reports' | 'messenger'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'projects' | 'tasks' | 'deadlines' | 'overdue' | 'departments' | 'materials' | 'archive' | 'reports' | 'messenger'>('overview');
   const [stats, setStats] = useState<Stats>({
     totalEmployees: 0,
     activeToday: 0,
     pendingTasks: 0,
-    completedToday: 0
+    completedToday: 0,
+    overdueTasks: 0
   });
   const [loading, setLoading] = useState(true);
   const [impersonateDialogOpen, setImpersonateDialogOpen] = useState(false);
@@ -50,6 +53,9 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
   const fetchStats = async () => {
     try {
       setLoading(true);
+      
+      // Обновляем просроченные задачи перед получением статистики
+      await supabase.rpc('update_overdue_tasks');
       
       // Получаем общее количество сотрудников и их данные
       const { data: employeesData, error: employeesError } = await supabase
@@ -86,6 +92,15 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
 
       if (completedError) throw completedError;
 
+      // Получаем количество просроченных задач
+      const { data: overdueTasks, error: overdueError } = await supabase
+        .from('tasks')
+        .select('id')
+        .eq('status', 'overdue')
+        .eq('archived', false);
+
+      if (overdueError) throw overdueError;
+
       // Уникальные активные сотрудники
       const uniqueActiveEmployees = [...new Set(activeEmployees?.map(emp => emp.employee_id) || [])];
 
@@ -93,7 +108,8 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
         totalEmployees: employeesData?.length || 0,
         activeToday: uniqueActiveEmployees.length,
         pendingTasks: pendingTasks?.length || 0,
-        completedToday: completedTasks?.length || 0
+        completedToday: completedTasks?.length || 0,
+        overdueTasks: overdueTasks?.length || 0
       });
 
       // Сохраняем список сотрудников для фильтра
@@ -185,6 +201,14 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
             Сроки
           </Button>
           <Button 
+            variant={activeTab === 'overdue' ? 'corporate' : 'ghost'}
+            onClick={() => setActiveTab('overdue')}
+            className={activeTab === 'overdue' ? '' : 'text-red-600 hover:text-red-700 hover:bg-red-50'}
+          >
+            <AlertTriangle className="w-4 h-4 mr-2" />
+            Просроченные
+          </Button>
+          <Button 
             variant={activeTab === 'departments' ? 'corporate' : 'ghost'}
             onClick={() => setActiveTab('departments')}
           >
@@ -225,7 +249,7 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
         {activeTab === 'overview' && (
           <div className="space-y-6">
             {/* Статистика */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
               <Card className="dashboard-card">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -275,6 +299,30 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
                   <div className="text-2xl font-bold text-primary">
                     {loading ? "..." : stats.completedToday}
                   </div>
+                </CardContent>
+              </Card>
+
+              <Card className={`dashboard-card ${stats.overdueTasks > 0 ? 'border-red-200 bg-red-50' : ''}`}>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <AlertTriangle className={`w-4 h-4 ${stats.overdueTasks > 0 ? 'text-red-500' : ''}`} />
+                    Просроченные задачи
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className={`text-2xl font-bold ${stats.overdueTasks > 0 ? 'text-red-600' : 'text-primary'}`}>
+                    {loading ? "..." : stats.overdueTasks}
+                  </div>
+                  {stats.overdueTasks > 0 && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-2 text-red-600 border-red-300 hover:bg-red-50"
+                      onClick={() => setActiveTab('overdue')}
+                    >
+                      Посмотреть детали
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -380,6 +428,9 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
 
         {/* Задачи по срокам */}
         {activeTab === 'deadlines' && <TasksByDeadline />}
+
+        {/* Просроченные задачи */}
+        {activeTab === 'overdue' && <OverdueTasksStats />}
 
         {/* Управление отделами */}
         {activeTab === 'departments' && <DepartmentManagement />}
