@@ -133,6 +133,14 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
 
       for (const record of timeRecords || []) {
         if (record.tasks) {
+          // Для задач на паузе - рассчитываем зафиксированное время на момент паузы
+          let pausedTime = 0;
+          if (record.status === 'paused') {
+            const taskStart = new Date(record.start_time!).getTime();
+            const savedPauses = (record.pause_duration || 0) * 60 * 1000;
+            pausedTime = Date.now() - taskStart - savedPauses;
+          }
+
           const activeItem: ActiveTaskItem = {
             task: record.tasks as Task,
             timeRecord: {
@@ -141,7 +149,7 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
               status: record.status as 'not-started' | 'working' | 'paused' | 'finished'
             },
             startTime: new Date(record.start_time!),
-            pausedTime: (record.pause_duration || 0) * 60 * 1000,
+            pausedTime: Math.max(0, pausedTime),
             pauseStart: record.status === 'paused' ? new Date() : null,
             status: record.status as 'working' | 'paused'
           };
@@ -157,23 +165,22 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
   };
 
   const getWorkedTime = (activeTask: ActiveTaskItem) => {
+    // Если задача на паузе - показываем зафиксированное время без изменений
+    if (activeTask.status === 'paused') {
+      return activeTask.pausedTime || 0;
+    }
+    
+    // Если задача в работе - считаем от времени старта до сейчас минус паузы
     const now = currentTime.getTime();
     const taskStartTime = new Date(activeTask.timeRecord.start_time!).getTime();
     
-    // Рассчитываем общее время с момента начала задачи
-    let totalTime = now - taskStartTime;
+    let workedTime = now - taskStartTime;
     
-    // Вычитаем сохраненные паузы из базы данных (в миллисекундах)
+    // Вычитаем все предыдущие паузы
     const savedPausesMs = (activeTask.timeRecord.pause_duration || 0) * 60 * 1000;
-    totalTime -= savedPausesMs;
+    workedTime -= savedPausesMs;
     
-    // Если задача сейчас на паузе, вычитаем время с момента начала паузы
-    if (activeTask.status === 'paused' && activeTask.pauseStart) {
-      const currentPauseDuration = now - activeTask.pauseStart.getTime();
-      totalTime -= currentPauseDuration;
-    }
-    
-    return Math.max(0, totalTime);
+    return Math.max(0, workedTime);
   };
 
   const formatTime = (milliseconds: number) => {
@@ -248,6 +255,9 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
     if (!activeTask || activeTask.status !== 'working') return;
 
     try {
+      // Вычисляем отработанное время на момент паузы
+      const workedTime = getWorkedTime(activeTask);
+      
       const { error } = await supabase
         .from('time_tracking')
         .update({ status: 'paused' })
@@ -260,6 +270,7 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
           ? { 
               ...task, 
               status: 'paused', 
+              pausedTime: workedTime, // Фиксируем время на момент паузы
               pauseStart: new Date(),
               timeRecord: { ...task.timeRecord, status: 'paused' }
             }
@@ -497,12 +508,15 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Clock className="w-5 h-5 text-primary" />
-                      <div>
-                        <CardTitle className="text-lg">{activeTask.task.title}</CardTitle>
-                        <CardDescription className="text-sm">
-                          {activeTask.task.description}
-                        </CardDescription>
-                      </div>
+                       <div>
+                         <CardTitle className="text-lg">{activeTask.task.title}</CardTitle>
+                         <CardDescription className="text-sm">
+                           {activeTask.task.description}
+                         </CardDescription>
+                         <div className="text-xs text-muted-foreground mt-1">
+                           Отработано сегодня: {formatTime(getWorkedTime(activeTask))}
+                         </div>
+                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge 
