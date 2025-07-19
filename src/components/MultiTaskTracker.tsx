@@ -165,8 +165,9 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
   };
 
   const getWorkedTime = (activeTask: ActiveTaskItem) => {
-    // Если задача на паузе - показываем зафиксированное время без изменений
+    // Если задача на паузе - показываем ТОЛЬКО зафиксированное время
     if (activeTask.status === 'paused') {
+      // Используем зафиксированное время, которое было на момент паузы
       return activeTask.pausedTime || 0;
     }
     
