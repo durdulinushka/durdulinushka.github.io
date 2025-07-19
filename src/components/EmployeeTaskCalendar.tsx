@@ -200,6 +200,7 @@ const EmployeeTaskCalendar = ({ employeeId, showAddButton = false, onAddTask }: 
       case 'in_progress':
       case 'in-progress': return 'В работе';
       case 'pending': return 'Ожидает';
+      case 'overdue': return 'Просрочено';
       default: return status;
     }
   };
