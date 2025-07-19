@@ -765,6 +765,10 @@ export type Database = {
         Args: { chat_id: string; user_id: string }
         Returns: boolean
       }
+      refresh_overdue_data: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       update_overdue_tasks: {
         Args: Record<PropertyKey, never>
         Returns: undefined
