@@ -480,6 +480,13 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
     }
   };
 
+  // Функция для получения общего времени всех задач сегодня
+  const getTotalWorkedTimeToday = () => {
+    return activeTasks.reduce((total, activeTask) => {
+      return total + getWorkedTime(activeTask);
+    }, 0);
+  };
+
   return (
     <div className="space-y-6">
       {/* Заголовок и кнопка добавления задачи */}
@@ -513,9 +520,6 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
                          <CardDescription className="text-sm">
                            {activeTask.task.description}
                          </CardDescription>
-                         <div className="text-xs text-muted-foreground mt-1">
-                           Отработано сегодня: {formatTime(getWorkedTime(activeTask))}
-                         </div>
                        </div>
                     </div>
                     <div className="flex items-center gap-2">

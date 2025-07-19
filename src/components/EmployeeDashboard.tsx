@@ -16,6 +16,7 @@ import { PersonalNotes } from "@/components/PersonalNotes";
 import { EmployeeProjects } from "@/components/EmployeeProjects";
 import { EmployeeMaterials } from "@/components/EmployeeMaterials";
 import { NotificationsPanel } from "@/components/NotificationsPanel";
+import { useTotalWorkedTime } from "@/hooks/useTotalWorkedTime";
 
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,6 +46,9 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
 
   // Используем хук для отслеживания непрочитанных сообщений
   const { unreadCount } = useUnreadMessages(currentUserId);
+  
+  // Используем хук для отслеживания общего отработанного времени
+  const { formattedTime } = useTotalWorkedTime(employeeId);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -137,7 +141,12 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
                   <User className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl">{employee.name}</CardTitle>
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    {employee.name}
+                    <Badge variant="secondary" className="text-xs">
+                      Отработано сегодня: {formattedTime}
+                    </Badge>
+                  </CardTitle>
                   <CardDescription>
                     {employee.position} • {employee.department}
                   </CardDescription>
