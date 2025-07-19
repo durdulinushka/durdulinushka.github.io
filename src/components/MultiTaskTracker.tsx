@@ -86,22 +86,23 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
 
       const activeTaskIds = (activeTimeRecords || []).map(record => record.task_id).filter(Boolean);
 
-      // Загружаем задачи, исключая те, что уже в работе
-      let query = supabase
+      // Загружаем все задачи сотрудника
+      const { data: allTasks, error } = await supabase
         .from('tasks')
         .select('*')
         .eq('assignee_id', employeeId)
         .in('status', ['pending', 'in-progress']);
 
-      if (activeTaskIds.length > 0) {
-        query = query.not('id', 'in', `(${activeTaskIds.map(id => `'${id}'`).join(',')})`);
-      }
-
-      const { data: tasks, error } = await query;
-
       if (error) throw error;
 
-      setAvailableTasks(tasks || []);
+      // Фильтруем задачи, исключая те, что уже в работе
+      const availableTasks = (allTasks || []).filter(task => !activeTaskIds.includes(task.id));
+
+      console.log('All tasks:', allTasks?.length);
+      console.log('Active task IDs:', activeTaskIds);
+      console.log('Available tasks:', availableTasks.length);
+
+      setAvailableTasks(availableTasks);
     } catch (error) {
       console.error('Error loading available tasks:', error);
       toast({ title: "Ошибка", description: "Не удалось загрузить доступные задачи", variant: "destructive" });
@@ -468,7 +469,10 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
         <h2 className="text-xl font-semibold">Активные задачи</h2>
         <Button
           variant="outline"
-          onClick={() => setShowTaskAcceptance(true)}
+          onClick={() => {
+            loadAvailableTasks(); // Обновляем список перед показом
+            setShowTaskAcceptance(true);
+          }}
           className="flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
@@ -575,7 +579,10 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
             <p className="text-muted-foreground mb-4">
               Примите задачу, чтобы начать работу
             </p>
-            <Button onClick={() => setShowTaskAcceptance(true)}>
+            <Button onClick={() => {
+              loadAvailableTasks();
+              setShowTaskAcceptance(true);
+            }}>
               Выбрать задачу
             </Button>
           </CardContent>
