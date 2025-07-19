@@ -30,6 +30,7 @@ interface ActiveTaskItem {
   pauseStart: Date | null;
   status: 'working' | 'paused';
   frozenTime?: number; // Время, зафиксированное для задач на паузе
+  resumeTime?: number; // Время возобновления работы после паузы
 }
 
 interface TimeTrackingRecord {
@@ -160,22 +161,22 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
   };
 
   const getWorkedTime = (activeTask: ActiveTaskItem) => {
-    // Если задача на паузе - используем frozenTime (зафиксированное время)
+    // ПРОСТАЯ ЛОГИКА: Если задача на паузе - возвращаем frozenTime БЕЗ изменений
     if (activeTask.status === 'paused') {
       return activeTask.frozenTime || 0;
     }
     
-    // Если задача в работе - считаем от времени старта до сейчас минус паузы
+    // Если задача в работе - проверяем есть ли у нее frozenTime (после возобновления)
+    if (activeTask.frozenTime && activeTask.resumeTime) {
+      // После возобновления: frozenTime + время с момента возобновления
+      const now = currentTime.getTime();
+      return activeTask.frozenTime + (now - activeTask.resumeTime);
+    }
+    
+    // Новая задача без пауз - считаем с начала
     const now = currentTime.getTime();
     const taskStartTime = new Date(activeTask.timeRecord.start_time!).getTime();
-    
-    let workedTime = now - taskStartTime;
-    
-    // Вычитаем все предыдущие паузы
-    const savedPausesMs = (activeTask.timeRecord.pause_duration || 0) * 60 * 1000;
-    workedTime -= savedPausesMs;
-    
-    return Math.max(0, workedTime);
+    return now - taskStartTime;
   };
 
   const formatTime = (milliseconds: number) => {
@@ -289,31 +290,27 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
 
   const resumeTask = async (taskIndex: number) => {
     const activeTask = activeTasks[taskIndex];
-    if (!activeTask || activeTask.status !== 'paused' || !activeTask.pauseStart) return;
+    if (!activeTask || activeTask.status !== 'paused') return;
 
     try {
-      const pauseDuration = new Date().getTime() - activeTask.pauseStart.getTime();
-      const newPausedTime = activeTask.pausedTime + pauseDuration;
-      const pauseDurationMinutes = Math.floor(newPausedTime / (1000 * 60));
-
+      // При возобновлении НЕ обновляем pause_duration - просто меняем статус
       const { error } = await supabase
         .from('time_tracking')
-        .update({
-          status: 'working',
-          pause_duration: pauseDurationMinutes
-        })
+        .update({ status: 'working' })
         .eq('id', activeTask.timeRecord.id);
 
       if (error) throw error;
+
+      const resumeTime = Date.now();
 
       setActiveTasks(prev => prev.map((task, index) => 
         index === taskIndex 
           ? { 
               ...task, 
-              status: 'working', 
-              pausedTime: newPausedTime,
+              status: 'working',
+              resumeTime, // Устанавливаем время возобновления
               pauseStart: null,
-              timeRecord: { ...task.timeRecord, status: 'working', pause_duration: pauseDurationMinutes }
+              timeRecord: { ...task.timeRecord, status: 'working' }
             }
           : task
       ));
