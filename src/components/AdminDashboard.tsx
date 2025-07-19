@@ -16,7 +16,6 @@ import DepartmentManagement from "./DepartmentManagement";
 import MaterialsManagement from "./MaterialsManagement";
 import { TasksByDeadline } from "./TasksByDeadline";
 import EmployeeTaskCalendar from "./EmployeeTaskCalendar";
-import OverdueTasksStats from "./OverdueTasksStats";
 import MessengerDashboard from "./MessengerDashboard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -36,7 +35,7 @@ interface Stats {
 }
 
 const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: AdminDashboardProps) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'projects' | 'tasks' | 'deadlines' | 'overdue' | 'departments' | 'materials' | 'archive' | 'reports' | 'messenger'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'projects' | 'tasks' | 'deadlines' | 'departments' | 'materials' | 'archive' | 'reports' | 'messenger'>('overview');
   const [stats, setStats] = useState<Stats>({
     totalEmployees: 0,
     activeToday: 0,
@@ -201,14 +200,6 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
             Сроки
           </Button>
           <Button 
-            variant={activeTab === 'overdue' ? 'corporate' : 'ghost'}
-            onClick={() => setActiveTab('overdue')}
-            className={activeTab === 'overdue' ? '' : 'text-red-600 hover:text-red-700 hover:bg-red-50'}
-          >
-            <AlertTriangle className="w-4 h-4 mr-2" />
-            Просроченные
-          </Button>
-          <Button 
             variant={activeTab === 'departments' ? 'corporate' : 'ghost'}
             onClick={() => setActiveTab('departments')}
           >
@@ -318,9 +309,9 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
                       variant="outline" 
                       size="sm" 
                       className="mt-2 text-red-600 border-red-300 hover:bg-red-50"
-                      onClick={() => setActiveTab('overdue')}
+                      onClick={() => setActiveTab('deadlines')}
                     >
-                      Посмотреть детали
+                      Посмотреть в сроках
                     </Button>
                   )}
                 </CardContent>
@@ -428,9 +419,6 @@ const AdminDashboard = ({ onBack, onImpersonate, onSwitchToEmployeeView }: Admin
 
         {/* Задачи по срокам */}
         {activeTab === 'deadlines' && <TasksByDeadline />}
-
-        {/* Просроченные задачи */}
-        {activeTab === 'overdue' && <OverdueTasksStats />}
 
         {/* Управление отделами */}
         {activeTab === 'departments' && <DepartmentManagement />}
