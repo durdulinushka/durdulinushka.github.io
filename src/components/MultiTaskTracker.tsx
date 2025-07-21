@@ -88,12 +88,12 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
 
       const activeTaskIds = (activeTimeRecords || []).map(record => record.task_id).filter(Boolean);
 
-      // Загружаем все задачи сотрудника
+      // Загружаем все задачи сотрудника (включая просроченные)
       const { data: allTasks, error } = await supabase
         .from('tasks')
         .select('*')
         .eq('assignee_id', employeeId)
-        .in('status', ['pending', 'in-progress']);
+        .in('status', ['pending', 'in-progress', 'overdue']);
 
       if (error) throw error;
 
