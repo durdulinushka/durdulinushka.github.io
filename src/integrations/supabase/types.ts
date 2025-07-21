@@ -658,6 +658,7 @@ export type Database = {
           pause_end: string | null
           pause_start: string
           time_tracking_id: string
+          worked_time_before_pause: number | null
         }
         Insert: {
           created_at?: string
@@ -665,6 +666,7 @@ export type Database = {
           pause_end?: string | null
           pause_start: string
           time_tracking_id: string
+          worked_time_before_pause?: number | null
         }
         Update: {
           created_at?: string
@@ -672,6 +674,7 @@ export type Database = {
           pause_end?: string | null
           pause_start?: string
           time_tracking_id?: string
+          worked_time_before_pause?: number | null
         }
         Relationships: [
           {

@@ -254,6 +254,18 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
       // Вычисляем отработанное время на момент паузы
       const workedTime = getWorkedTime(activeTask);
       const totalHours = workedTime / (1000 * 60 * 60);
+      const pauseStart = new Date();
+      
+      // Архивируем паузу с фиксацией отработанного времени
+      const { error: pauseError } = await supabase
+        .from('time_pauses')
+        .insert({
+          time_tracking_id: activeTask.timeRecord.id,
+          pause_start: pauseStart.toISOString(),
+          worked_time_before_pause: totalHours
+        });
+
+      if (pauseError) throw pauseError;
       
       // Сохраняем в базе зафиксированное время и статус паузы
       const { error } = await supabase
@@ -272,7 +284,7 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
               ...task, 
               status: 'paused', 
               frozenTime: workedTime, // Замораживаем время на момент паузы
-              pauseStart: new Date(),
+              pauseStart: pauseStart,
               timeRecord: { ...task.timeRecord, status: 'paused', total_hours: totalHours }
             }
           : task
@@ -280,7 +292,7 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
 
       toast({
         title: "Задача приостановлена",
-        description: `"${activeTask.task.title}" поставлена на паузу`,
+        description: `"${activeTask.task.title}" поставлена на паузу. Отработано: ${Math.floor(totalHours)}ч ${Math.floor((totalHours % 1) * 60)}м`,
       });
     } catch (error) {
       console.error('Error pausing task:', error);
@@ -293,6 +305,19 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
     if (!activeTask || activeTask.status !== 'paused') return;
 
     try {
+      const resumeTime = new Date();
+      
+      // Завершаем последнюю паузу, записываем время окончания
+      const { error: pauseEndError } = await supabase
+        .from('time_pauses')
+        .update({ pause_end: resumeTime.toISOString() })
+        .eq('time_tracking_id', activeTask.timeRecord.id)
+        .is('pause_end', null)
+        .order('pause_start', { ascending: false })
+        .limit(1);
+
+      if (pauseEndError) throw pauseEndError;
+      
       // При возобновлении НЕ обновляем pause_duration - просто меняем статус
       const { error } = await supabase
         .from('time_tracking')
@@ -301,14 +326,14 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
 
       if (error) throw error;
 
-      const resumeTime = Date.now();
+      const resumeTimeMs = resumeTime.getTime();
 
       setActiveTasks(prev => prev.map((task, index) => 
         index === taskIndex 
           ? { 
               ...task, 
               status: 'working',
-              resumeTime, // Устанавливаем время возобновления
+              resumeTime: resumeTimeMs, // Устанавливаем время возобновления
               pauseStart: null,
               timeRecord: { ...task.timeRecord, status: 'working' }
             }
