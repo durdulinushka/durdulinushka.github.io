@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, FolderOpen, MapPin, FileText, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Users, Calendar, FolderOpen, MapPin, FileText, Download, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ProjectMaterials } from "./ProjectMaterials";
+import { ProjectManagement } from "./ProjectManagement";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 
@@ -37,6 +39,7 @@ interface EmployeeProjectsProps {
 export const EmployeeProjects = ({ employeeId }: EmployeeProjectsProps) => {
   const [projectMemberships, setProjectMemberships] = useState<ProjectMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showProjectManagement, setShowProjectManagement] = useState(false);
   const { toast } = useToast();
 
   const fetchEmployeeProjects = async () => {
@@ -123,10 +126,24 @@ export const EmployeeProjects = ({ employeeId }: EmployeeProjectsProps) => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FolderOpen className="w-5 h-5" />
-            Мои проекты
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <FolderOpen className="w-5 h-5" />
+                Мои проекты
+              </CardTitle>
+              <CardDescription>
+                Проекты, в которых вы участвуете
+              </CardDescription>
+            </div>
+            <Button 
+              onClick={() => setShowProjectManagement(!showProjectManagement)}
+              variant="outline"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {showProjectManagement ? "Скрыть управление" : "Управлять проектами"}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {projectMemberships.length === 0 ? (
@@ -210,6 +227,11 @@ export const EmployeeProjects = ({ employeeId }: EmployeeProjectsProps) => {
           )}
         </CardContent>
       </Card>
+
+      {/* Управление проектами */}
+      {showProjectManagement && (
+        <ProjectManagement isAdmin={false} />
+      )}
     </div>
   );
 };

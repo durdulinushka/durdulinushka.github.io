@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowUp, Clock, Pause, User, LogOut, BarChart3, Settings, Calendar, MessageSquare, StickyNote, FolderOpen, FileText } from "lucide-react";
+import { ArrowUp, Clock, Pause, User, LogOut, BarChart3, Settings, Calendar, MessageSquare, StickyNote, FolderOpen, FileText, Plus, Building } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import TaskTracker from "@/components/TaskTracker";
 import EmployeeTaskCalendar from "@/components/EmployeeTaskCalendar";
@@ -16,6 +16,8 @@ import { PersonalNotes } from "@/components/PersonalNotes";
 import { EmployeeProjects } from "@/components/EmployeeProjects";
 import { EmployeeMaterials } from "@/components/EmployeeMaterials";
 import { NotificationsPanel } from "@/components/NotificationsPanel";
+import { ProjectManagement } from "@/components/ProjectManagement";
+import { AddPersonalTaskDialog } from "@/components/AddPersonalTaskDialog";
 import { useTotalWorkedTime } from "@/hooks/useTotalWorkedTime";
 
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
@@ -37,6 +39,7 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
   const [currentTime, setCurrentTime] = useState(new Date());
   const [employeeId, setEmployeeId] = useState<string>("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [showAddPersonalTaskDialog, setShowAddPersonalTaskDialog] = useState(false);
   const [employee, setEmployee] = useState<Employee>({
     name: "Загрузка...",
     department: "Загрузка...",
@@ -106,6 +109,11 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
     setEmployee(prev => ({ ...prev, name: newName }));
   };
 
+  const handlePersonalTaskAdded = () => {
+    // This will trigger re-render of task components
+    setCurrentTime(new Date());
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -167,7 +175,7 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
 
         {/* Навигация с вкладками */}
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-9">
+          <TabsList className="grid w-full grid-cols-10">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
               Рабочий стол
@@ -208,6 +216,10 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
             <TabsTrigger value="notes" className="flex items-center gap-2">
               <StickyNote className="w-4 h-4" />
               Заметки
+            </TabsTrigger>
+            <TabsTrigger value="tasks" className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              Задачи
             </TabsTrigger>
           </TabsList>
 
@@ -326,7 +338,60 @@ const EmployeeDashboard = ({ onBack, employeeId: impersonatedEmployeeId }: Emplo
           <TabsContent value="notes" className="space-y-6">
             <PersonalNotes />
           </TabsContent>
+
+          {/* Вкладка: Создание задач и проектов */}
+          <TabsContent value="tasks" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Личные задачи */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Plus className="w-5 h-5" />
+                    Личные задачи
+                  </CardTitle>
+                  <CardDescription>
+                    Создавайте задачи для личного выполнения
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    onClick={() => setShowAddPersonalTaskDialog(true)}
+                    className="w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Создать личную задачу
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Проекты */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building className="w-5 h-5" />
+                    Проекты
+                  </CardTitle>
+                  <CardDescription>
+                    Создавайте и управляйте проектами
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-sm text-muted-foreground mb-4">
+                    Управление проектами доступно на вкладке "Проекты"
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
         </Tabs>
+
+        {/* Диалоги */}
+        <AddPersonalTaskDialog
+          open={showAddPersonalTaskDialog}
+          onOpenChange={setShowAddPersonalTaskDialog}
+          onTaskAdded={handlePersonalTaskAdded}
+          employeeId={employeeId}
+        />
       </div>
     </div>
   );
