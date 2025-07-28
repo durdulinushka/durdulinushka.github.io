@@ -90,16 +90,14 @@ export const ProjectManagement = ({ isAdmin = false }: ProjectManagementProps) =
               <FolderOpen className="w-5 h-5" />
               Проекты
             </CardTitle>
-            {isAdmin && (
-              <Button
-                onClick={() => setShowAddDialog(true)}
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Добавить проект
-              </Button>
-            )}
+            <Button
+              onClick={() => setShowAddDialog(true)}
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Добавить проект
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -107,16 +105,14 @@ export const ProjectManagement = ({ isAdmin = false }: ProjectManagementProps) =
             <div className="text-center py-8 text-muted-foreground">
               <FolderOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>Проекты не найдены</p>
-              {isAdmin && (
-                <Button
-                  variant="outline"
-                  onClick={() => setShowAddDialog(true)}
-                  className="mt-4"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Создать первый проект
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                onClick={() => setShowAddDialog(true)}
+                className="mt-4"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Создать первый проект
+              </Button>
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
