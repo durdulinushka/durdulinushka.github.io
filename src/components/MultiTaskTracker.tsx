@@ -29,8 +29,8 @@ interface ActiveTaskItem {
   pausedTime: number;
   pauseStart: Date | null;
   status: 'working' | 'paused';
-  frozenTime?: number; // Время, зафиксированное для задач на паузе
-  resumeTime?: number; // Время возобновления работы после паузы
+  accumulatedTime?: number; // Накопленное время работы (миллисекунды)
+  currentStartTime?: Date; // Время текущего старта после возобновления
 }
 
 interface TimeTrackingRecord {
@@ -146,8 +146,8 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
             pausedTime: 0,
             pauseStart: record.status === 'paused' ? new Date() : null,
             status: record.status as 'working' | 'paused',
-            // Для задач на паузе используем total_hours из базы как зафиксированное время
-            frozenTime: record.status === 'paused' ? (record.total_hours || 0) * 60 * 60 * 1000 : undefined
+            // Для задач на паузе используем total_hours из базы как накопленное время
+            accumulatedTime: record.status === 'paused' ? (record.total_hours || 0) * 60 * 60 * 1000 : undefined
           };
           activeTaskItems.push(activeItem);
         }
@@ -161,16 +161,15 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
   };
 
   const getWorkedTime = (activeTask: ActiveTaskItem) => {
-    // ПРОСТАЯ ЛОГИКА: Если задача на паузе - возвращаем frozenTime БЕЗ изменений
+    // Если задача на паузе - возвращаем ранее накопленное время (таймер обнулен)
     if (activeTask.status === 'paused') {
-      return activeTask.frozenTime || 0;
+      return activeTask.accumulatedTime || 0;
     }
     
-    // Если задача в работе - проверяем есть ли у нее frozenTime (после возобновления)
-    if (activeTask.frozenTime && activeTask.resumeTime) {
-      // После возобновления: frozenTime + время с момента возобновления
+    // Если задача в работе после возобновления - добавляем время с последнего старта к накопленному
+    if (activeTask.accumulatedTime !== undefined && activeTask.currentStartTime) {
       const now = currentTime.getTime();
-      return activeTask.frozenTime + (now - activeTask.resumeTime);
+      return activeTask.accumulatedTime + (now - activeTask.currentStartTime.getTime());
     }
     
     // Новая задача без пауз - считаем с начала
@@ -283,8 +282,9 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
           ? { 
               ...task, 
               status: 'paused', 
-              frozenTime: workedTime, // Замораживаем время на момент паузы
+              accumulatedTime: workedTime, // Сохраняем накопленное время
               pauseStart: pauseStart,
+              currentStartTime: undefined, // Обнуляем текущий старт
               timeRecord: { ...task.timeRecord, status: 'paused', total_hours: totalHours }
             }
           : task
@@ -333,7 +333,7 @@ const MultiTaskTracker = ({ dailyHours, employeeId }: MultiTaskTrackerProps) => 
           ? { 
               ...task, 
               status: 'working',
-              resumeTime: resumeTimeMs, // Устанавливаем время возобновления
+              currentStartTime: resumeTime, // Устанавливаем новое время старта
               pauseStart: null,
               timeRecord: { ...task.timeRecord, status: 'working' }
             }
